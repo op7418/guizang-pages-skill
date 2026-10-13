@@ -1,0 +1,191 @@
+  /* ══════════════════════════════════════
+     UI OVERLAY — Settings, Share, Edit
+     Shared across all themes
+     ══════════════════════════════════════ */
+
+  /* ── Editable text ── */
+  [contenteditable] {
+    outline: none;
+    cursor: text;
+    transition: background 0.15s;
+    border-radius: 2px;
+  }
+  [contenteditable]:hover {
+    background: rgba(0,0,0,0.03);
+  }
+  [contenteditable]:focus {
+    background: rgba(0,0,0,0.05);
+    box-shadow: 0 0 0 2px var(--accent, #002FA7);
+  }
+
+  /* ── FAB container (bottom-right) ── */
+  .hf-fab {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .hf-fab-btn {
+    width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--fg, #0a0a0a);
+    color: var(--bg, #fafaf8);
+    border: none; border-radius: 0; cursor: pointer;
+    transition: opacity 0.15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .hf-fab-btn:hover { opacity: 0.85; }
+  .hf-fab-btn svg { width: 20px; height: 20px; }
+
+  /* ── Share button (top-right) ── */
+  .hf-share {
+    position: fixed;
+    right: 24px;
+    top: 24px;
+    z-index: 200;
+  }
+
+  .hf-share-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px;
+    font-family: var(--font-mono, monospace);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    background: var(--fg, #0a0a0a);
+    color: var(--bg, #fafaf8);
+    border: none; cursor: pointer;
+    transition: opacity 0.15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .hf-share-btn:hover { opacity: 0.85; }
+  .hf-share-btn svg { width: 16px; height: 16px; }
+
+  /* ── Dropdown menu (share + settings) ── */
+  .hf-dropdown {
+    position: absolute;
+    background: var(--fg, #0a0a0a);
+    color: var(--bg, #fafaf8);
+    min-width: 220px;
+    padding: 8px 0;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(4px);
+    transition: opacity 0.15s, transform 0.15s;
+    z-index: 210;
+  }
+  .hf-dropdown.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .hf-share .hf-dropdown { right: 0; top: calc(100% + 6px); }
+  .hf-fab .hf-dropdown { right: 0; bottom: calc(100% + 6px); }
+
+  .hf-dropdown-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px;
+    font-family: var(--font-sans, sans-serif);
+    font-size: 13px; font-weight: 400;
+    cursor: pointer;
+    transition: background 0.1s;
+    border: none; background: none; color: inherit;
+    width: 100%; text-align: left;
+  }
+  .hf-dropdown-item:hover { background: rgba(255,255,255,0.08); }
+  .hf-dropdown-item svg { width: 16px; height: 16px; opacity: 0.5; }
+
+  .hf-dropdown-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.1);
+    margin: 6px 0;
+  }
+
+  .hf-dropdown-label {
+    padding: 8px 16px 4px;
+    font-family: var(--font-mono, monospace);
+    font-size: 9px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    opacity: 0.35;
+  }
+
+  /* ── Color swatches ── */
+  .hf-swatches {
+    display: flex; gap: 6px;
+    padding: 6px 16px 10px;
+  }
+  .hf-swatch {
+    width: 28px; height: 28px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+  .hf-swatch:hover { border-color: rgba(255,255,255,0.3); }
+  .hf-swatch.active { border-color: var(--bg, #fff); }
+  .hf-swatch.active::after {
+    content: '✓';
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+
+  /* ── Font options ── */
+  .hf-font-options {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 4px 16px 8px;
+  }
+  .hf-font-option {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px;
+    font-size: 13px;
+    cursor: pointer;
+    border: none; background: none; color: inherit;
+    width: 100%; text-align: left;
+    transition: background 0.1s;
+  }
+  .hf-font-option:hover { background: rgba(255,255,255,0.08); }
+  .hf-font-option.active { background: rgba(255,255,255,0.12); }
+  .hf-font-option .font-preview {
+    font-size: 15px; font-weight: 300;
+    opacity: 0.7;
+  }
+  .hf-font-option .font-name {
+    font-family: var(--font-mono, monospace);
+    font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase; opacity: 0.4;
+  }
+
+  /* ── Toast notification ── */
+  .hf-toast {
+    position: fixed;
+    bottom: 80px; left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    padding: 10px 20px;
+    background: var(--fg, #0a0a0a);
+    color: var(--bg, #fafaf8);
+    font-family: var(--font-mono, monospace);
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 0.06em;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 300;
+    pointer-events: none;
+  }
+  .hf-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── Print hide UI ── */
+  @media print {
+    .hf-fab, .hf-share, .hf-toast, .toc { display: none !important; }
+    [contenteditable] { box-shadow: none !important; background: none !important; }
+  }
