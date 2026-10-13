@@ -2,45 +2,44 @@
 
 ## 未解决
 
-### P0 — 阻塞使用
+### P2
+#### PDF 个别页底部仍有留白（≤ 0.42 页）
+- **现象**：标题与紧随的大图被 `break-after: avoid` 绑在同一页时，前一页底部留白
+- **数据**（Chrome A4，排除末页）：示例文章杂志风最大 0.20、瑞士风 0.42；192 期周刊 0.31 / 0.38
+- **说明**：这是「标题不落单」的有意代价；把图片上限压到 100mm 测过，没有改善
+#### Chrome 下中西间距靠渲染器插空格
+- Chrome/Edge 不支持 `text-autospace`，由 render.mjs 插 `.hf-sp`；手写 HTML 片段（components 里的 raw HTML）不经过这一步
+#### 标点挤压依赖字体
+- `text-spacing-trim` 只在 Chromium 且字体带 `chws`/`halt` 时生效；Safari/Firefox 无效
+#### 无 JS 时设置/导出按钮可见但不可用
+- 按钮现在静态写进 HTML，但交互仍依赖 ui.js
 
-#### TOC 侧边栏遮挡内容
-- **现象**：左侧目录导航打开后只能看到一半，遮挡了页面正文
-- **尝试过的方案**：
-  1. `.toc` 容器设 `pointer-events: none` → 无效
-  2. `.toc` 容器设 `width:0; height:0; overflow:visible` → 无效
-  3. toggle 按钮和 panel 各自 `position: fixed` → 仍然遮挡
-- **可能原因**：容器的 stacking context 或 z-index 与页面 grid 冲突，需要用浏览器 DevTools 逐层排查
-- **建议方向**：把 TOC 从 `.article` 容器内部移到 `<body>` 直接子元素，避免 grid 布局影响 fixed 定位
+## 已解决（v0.8，2026-10-13）
 
-#### 设置和导出按钮不显示
-- **现象**：右下角设置 FAB 和右上角导出按钮在渲染后的页面上不出现
-- **确认点**：ui.js 代码已注入到 output HTML 中（grep 可搜到 `fab-btn`、`toc-toggle`、`exportWechat` 等关键字）
-- **可能原因**：
-  1. JS 初始化时机问题：ui.js 中的 DOM 操作在 DOMContentLoaded 前执行
-  2. CSS z-index 被其他元素覆盖
-  3. ui.css 样式未正确内联或加载
-- **建议方向**：在浏览器 DevTools 中检查 DOM 是否有 `.fab-container` 和 `.share-bar` 元素，以及它们的 computed style
+### TOC 侧边栏遮挡内容
+- **原因**：TOC 打开时正文不让位，窄屏也没有遮罩/关闭逻辑
+- **修复**：>1024px 打开时 `body` 左移 300px；≤1024px 改抽屉 + `.toc-scrim`，Esc/点遮罩关闭；1440/1280 宽实测零重叠
+### 设置和导出按钮不显示
+- **原因**：按钮由 ui.js 运行时注入，JS 未执行即无按钮；render.mjs 读不到资源文件时静默跳过
+- **修复**：按钮标记静态写入 HTML；缺资源直接报错退出；z-index 提到 1000
+### 衬线主题（杂志风）换色无变化
+- **原因**：杂志风几乎没有元素使用 `--accent`，换色只改到 1 个元素；Playfair 字体查询串错误加载失败
+- **修复**：新增 ACCENT CARRIERS（编号、引用线、列表符号、卡片、pullquote、链接下划线…），实测换色改到 27 个元素；字体查询统一放 `assets/themes.json`
+### PDF 大片空白
+- **原因**：`.hero, .section { break-inside: avoid }` 让整节内容不可拆分，一节放不下就整页跳过
+- **修复**：去掉整节不拆分，只对小块/figure 防拆分；标题 `break-after: avoid`；`@page` A4；图片限高 120mm；导出前提示勾选「背景图形」；lazy 图片打印前转 eager
+- **数据**：最大底部留白 0.90 → 0.20（杂志）、0.79 → 0.42（瑞士）
+### 公众号导出
+- 按需求整体移除（`wechat-export.js`、菜单项、文档）
+### 连续分割线 / `---` 漏成文字
+- **原因**：Markdown 的 `---` 没被解析，作为 `<p>---</p>` 原样显示；pullquote 与 divider 相邻时双线
+- **修复**：`---/***/___` 渲染为 `hr.divider`；节首节尾、pullquote 后、连续 divider 自动隐藏；瑞士风 divider 只留间距
+### 长图导出失败（v0.8 回归，已修）
+- **原因**：新加的 `color-mix()` 被 html2canvas 解析失败
+- **修复**：改用纯 `var(--accent)`；规则：样式表里不要用 `color-mix()/oklch()/color()`
+### 中文排版无统一规则
+- **修复**：见 `references/design-rules.md` §中文排版 T1–T14 与 `references/cjk-typography-research.md`
 
-### P1 — 影响体验
-
-#### 公众号导出的标题间距
-- **现象**：章节标题与分割线之间的间距已修复（用 padding-top + br 撑高度），但部分场景下仍有异常
-- **根因**：公众号编辑器对空白元素有复杂的折叠规则，不同版本可能表现不同
-- **缓解方案**：当前用 `padding-top` + `font-size:0; line-height:0` 的 `<br>` 组合，大部分情况可行
-
-#### PDF 导出样式丢失
-- **现象**：部分背景色和 accent 色块在 PDF 中消失
-- **已做**：CSS 中加了 `print-color-adjust: exact; -webkit-print-color-adjust: exact`
-- **根因**：部分浏览器 print 模式默认不打印背景色，需要用户手动勾选"背景图形"
-- **建议方向**：在导出 PDF 时弹出提示"请在打印对话框中勾选「背景图形」选项"
-
-#### 连续分割线问题
-- **现象**：pullquote 组件自带上下 border，section 也有 border-bottom，连续出现时会双线
-- **已做**：CSS 中用 `.pullquote + .section-divider` 选择器去重；Swiss 模式改为几乎零线条
-- **残留**：杂志风中某些组件组合下仍可能出现
-
-## 已解决
 
 ### 公众号导出纯文本（无样式）
 - **原因**：第一版用 `import()` 加载 html2canvas，`file://` 协议下被 CORS 拦截
