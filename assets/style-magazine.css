@@ -1611,3 +1611,68 @@
   .table-wrap td:first-child { white-space: nowrap; }
   .table-caption, .hc-cap { font-family: var(--font-sans) !important; text-transform: none !important; letter-spacing: 0 !important; text-align: left !important; }
   .table-wrap > table { margin: 0 !important; }
+
+  /* ===== v0.12 · 共同：目录字号 ≥ 正文；条形图更疏朗 ===== */
+  .toc-panel { width: 320px !important; }
+  .toc-header { font-size: 13px !important; margin-bottom: 18px !important; }
+  .toc-item { font-size: 1.0625rem !important; line-height: 1.55 !important; padding: 9px 0 !important; gap: 12px !important; align-items: baseline !important; }
+  .toc-num { font-size: 0.8rem !important; }
+  .hchart { padding: 30px 34px !important; }
+  .hc-title { margin-bottom: 22px !important; }
+  .hc-legend { margin-bottom: 22px !important; gap: 8px 20px !important; }
+  .hc-row { padding: 7px 0 !important; gap: 18px !important; }
+  .hc-group { padding: 16px 0 !important; }
+  .hc-bars { gap: 6px !important; }
+  .hc-bar { height: 20px !important; }
+  .hc-group .hc-bar { height: 14px !important; }
+  .hc-cap { margin-top: 20px !important; }
+
+  /* ======================================================================
+     v0.12 · 杂志风 = 文学/编辑排版：居中轴、衬线正文、首字下沉、花饰分隔、
+     斜体图注、居中大引号金句。与瑞士风的“左轨非对称网格”刻意相反。
+     ====================================================================== */
+  .section p, .section li, .section td, blockquote p { font-family: var(--font-serif); }
+  .section > p, .section li { font-size: 1.08rem; line-height: 1.95; }
+  .hero { text-align: center; padding-top: 72px; padding-bottom: 40px; }
+  .hero h1 { font-size: 2.7rem; line-height: 1.3; font-weight: 600; letter-spacing: 0.01em; }
+  .hero-subtitle { font-style: italic; color: var(--fg-secondary); margin: 18px auto 0; }
+  .hero::after { content: "❦"; grid-column: 1 / -1; justify-self: center; margin-top: 34px; color: var(--accent-ink, var(--accent)); font-size: 1.4rem; }
+  .doc-chrome { text-align: center; }
+
+  /* 章节：花饰分隔 + 居中罗马式小号章节号 + 居中标题 */
+  .section { border-top: none !important; padding-top: 56px; }
+  .section::before { content: "· · ✦ · ·"; grid-column: 1 / -1; justify-self: center; color: var(--fg-tertiary); letter-spacing: 0.35em; font-size: 0.9rem; margin-bottom: 40px; }
+  .section:first-of-type::before { content: none; }
+  .section > .section-number { text-align: center; font-family: var(--font-serif); font-style: italic; font-size: 0.95rem; letter-spacing: 0.2em; color: var(--accent-ink, var(--accent)); margin-bottom: 10px; }
+  .section > .section-number::before { content: "— "; } .section > .section-number::after { content: " —"; }
+  .section > h2 { text-align: center; font-size: 1.85rem; line-height: 1.4; font-weight: 600; margin-bottom: 34px; }
+  .section > h2 + .divider, .section > hr.divider { display: none; }
+  .section > h3 { font-family: var(--font-serif); font-style: italic; font-weight: 600; text-align: center; }
+
+  /* 首字下沉：每节第一段 */
+  .section > h2 + p::first-letter, .section > h2 ~ p:first-of-type::first-letter {
+    float: left; font-family: var(--font-serif); font-weight: 700; font-size: 3.6em; line-height: 0.92;
+    margin: 0.08em 0.14em 0 0; color: var(--accent-ink, var(--accent));
+  }
+
+  /* 图注：居中斜体衬线 */
+  .figure-card figcaption, .hc-cap, .table-caption { font-family: var(--font-serif) !important; font-style: italic; text-align: center !important; font-size: 0.85rem !important; color: var(--fg-secondary) !important; }
+  .figure-card figcaption { margin-top: 12px !important; }
+
+  /* 金句：居中、大引号、上下细线 */
+  .pullquote { text-align: center; border-top: 1px solid var(--border) !important; border-bottom: 1px solid var(--border) !important; padding: 44px 48px 36px !important; position: relative; }
+  .pullquote::before { content: "“"; display: block; font-family: Georgia, var(--font-serif); font-size: 5rem; line-height: 0.6; color: var(--accent-ink, var(--accent)); margin-bottom: 8px; }
+  .pullquote p { font-size: 1.6rem !important; line-height: 1.6 !important; font-style: italic; }
+  .pq-cite { text-align: center; font-style: normal; }
+
+  /* 普通引用：居中轴上的“边注”感——左侧细线，衬线正文色 */
+  blockquote { background: none !important; border-left: 1px solid var(--accent) !important; padding: 4px 0 4px 24px !important; }
+  blockquote .bq-nested { background: var(--quote-tint, rgba(0,0,0,0.03)) !important; }
+
+  /* 表格：书籍式三线表 */
+  .table-wrap th { border-top: 1.5px solid var(--fg); }
+  .table-wrap tbody tr:nth-child(even) td { background: none !important; }
+  .table-wrap tbody tr:last-child td { border-bottom: 1.5px solid var(--fg); }
+  .hchart { background: none !important; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding-left: 0 !important; padding-right: 0 !important; }
+  .hc-title { text-align: center; font-family: var(--font-serif); font-size: 1.1rem !important; }
+  .hc-legend { justify-content: center; }

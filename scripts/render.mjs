@@ -378,6 +378,9 @@ for (let i = 0; i < originalLines.length; i++) {
       const enMatch = headingText.match(/^([^一-鿿]+)/);
       if (enMatch) headingText = enMatch[1].trim();
     }
+    // Auto-numbered sections (01/02/…) — strip the author's own ordinal prefix so the number
+    // isn't shown twice: 一、 / 二. / 第三部分 / 第3章： / 1. / 01 / Part 2: …
+    headingText = headingText.replace(/^\s*(?:第\s*[一二三四五六七八九十百零〇两\d]+\s*[部分章节篇讲回]*\s*[、.．:：\-—\s]*|[一二三四五六七八九十]+\s*[、.．:：]\s*|\(?[一二三四五六七八九十]+\)\s*|（[一二三四五六七八九十]+）\s*|\d{1,2}\s*[、.．:：)]\s*|(?:Part|Chapter|Section)\s+\d+\s*[:.\-—]?\s*)/i, '').trim() || headingText;
     currentSection = {
       num: String(sectionCount).padStart(2, '0'),
       title: headingText,
