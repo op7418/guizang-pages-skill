@@ -1064,3 +1064,11 @@
     .doc-chrome { grid-template-columns: 1fr !important; grid-template-areas: "bar" "tags" "meta"; }
     .doc-chrome > .doc-chrome-meta { justify-self: start; }
   }
+  /* 打印/PDF：页宽不足以放左轨网格 → 单栏流式（左轨内容回到正文上方） */
+  @media print {
+    .section.section { display: block !important; margin-top: 24px; }
+    .section.section > .section-header { display: flex !important; gap: 20px; align-items: baseline; }
+    .section.section > .figure-card, .pullquote-swiss, .highlight-swiss { display: block !important; }
+    .section.section > .figure-card > figcaption { border-top: 0; padding-top: 6px !important; }
+    .pullquote-swiss .pq-bar { display: none; }
+  }
