@@ -1366,7 +1366,7 @@
   .highlight-card { box-shadow: inset 4px 0 0 var(--accent); }
   .pullquote { border-top-color: var(--accent); }
   .pullquote .accent-mark, .pullquote strong { color: var(--accent-ink, var(--accent)); }
-  /* no color-mix(): html2canvas (long-image export) can't parse color() and aborts */
+  /* no color-mix(): keep colours plain for print/export */
   .chrome-tag { border-color: var(--accent); }
   a { text-decoration-color: var(--accent); }
 

@@ -1,6 +1,6 @@
 ---
 name: guizang-page-skill
-description: 将文档、文章或笔记渲染为精排单页 HTML，支持导出 PDF 和长图（不提供公众号导出，公众号排版请用 wechat-formatter）。当用户需要把文档排版成网页，或提到"排版"、"生成网页"、"做成页面"、"Page Skill"时使用。
+description: 将文档、文章或笔记渲染为精排单页 HTML，PDF 与长图由模型用 scripts/export.mjs 导出（页面内不再带导出按钮；不提供公众号导出，公众号排版请用 wechat-formatter）。当用户需要把文档排版成网页，或提到"排版"、"生成网页"、"做成页面"、"Page Skill"时使用。
 ---
 
 # 归藏 Page
@@ -142,6 +142,19 @@ open output.html
 - [ ] 图片加载正常
 - [ ] TOC 导航正常
 - [ ] 无连续双线问题
+
+
+### Step 5 · 导出 PDF / 长图（模型执行，页面里没有导出按钮）
+
+用户要 PDF 或长图时，由模型运行导出脚本（依赖 Chrome + `puppeteer-core`，首次在 skill 目录 `npm i puppeteer-core`；Chrome 路径可用 `CHROME_PATH` 指定）：
+
+```bash
+node scripts/export.mjs output.html --pdf output.pdf                 # A4，走页面的 print CSS（空白预算 ≤25%/页）
+node scripts/export.mjs output.html --png output.png --width 1440    # 全页长图，默认 2x 像素
+node scripts/export.mjs output.html --pdf a.pdf --png a.png --color 3 --font 0   # 指定配色/字体（序号或名称）
+```
+
+脚本会先把懒加载图片改为立即加载并滚动全页、等待所有图片与 `document.fonts.ready`，长图隐藏设置按钮和目录。导出后检查：图片无缺失（脚本会打印失败的图片）、PDF 页数合理、无大片空白页。交付时附上导出文件。
 
 ## 组件参考
 

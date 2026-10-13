@@ -8,109 +8,17 @@
   const STORE = 'hf-page-prefs:' + style;
 
   // ── Helpers ──
-  function toast(msg, ms) {
-    let t = document.querySelector('.hf-toast');
-    if (!t) {
-      t = document.createElement('div');
-      t.className = 'hf-toast';
-      document.body.appendChild(t);
-    }
-    t.textContent = msg;
-    t.classList.add('show');
-    clearTimeout(t._h);
-    t._h = setTimeout(() => t.classList.remove('show'), ms || 2200);
-  }
-
   function closeAllDropdowns() {
     document.querySelectorAll('.hf-dropdown.open').forEach(d => d.classList.remove('open'));
   }
 
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.hf-dropdown') && !e.target.closest('.hf-fab-btn') && !e.target.closest('.hf-share-btn')) {
+    if (!e.target.closest('.hf-dropdown') && !e.target.closest('.hf-fab-btn')) {
       closeAllDropdowns();
     }
   });
 
-  // ── Load html2canvas via script tag (works with file:// protocol) ──
-  function loadHtml2Canvas() {
-    return new Promise((resolve, reject) => {
-      if (window.html2canvas) return resolve(window.html2canvas);
-      const s = document.createElement('script');
-      s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
-      s.onload = () => resolve(window.html2canvas);
-      s.onerror = () => reject(new Error('Failed to load html2canvas'));
-      document.head.appendChild(s);
-    });
-  }
-
-  document.getElementById('hf-share-toggle').addEventListener('click', (e) => {
-    e.stopPropagation();
-    const dd = document.getElementById('hf-share-dropdown');
-    const wasOpen = dd.classList.contains('open');
-    closeAllDropdowns();
-    if (!wasOpen) dd.classList.add('open');
-  });
-
-  // PDF: use browser print dialog
-  document.getElementById('hf-export-pdf').addEventListener('click', () => {
-    closeAllDropdowns();
-    // Chrome/Edge/Safari drop background colours unless "Background graphics"
-    // is ticked in the print dialog; CSS print-color-adjust:exact covers Chrome
-    // but not every browser, so tell the user before the dialog opens.
-    toast('打印对话框里展开「更多设置」，勾选「背景图形」，目标选「另存为 PDF」', 4200);
-    setTimeout(() => window.print(), 1200);
-  });
-
-  // Image: html2canvas → PNG download
-  document.getElementById('hf-export-image').addEventListener('click', async () => {
-    closeAllDropdowns();
-    toast('正在生成长图…');
-    try {
-      eagerImages();
-      await Promise.all([...document.images].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })));
-      const h2c = await loadHtml2Canvas();
-      // Hide UI elements during capture
-      document.querySelectorAll('.hf-fab, .hf-share, .toc').forEach(el => el.style.display = 'none');
-      // Remove contenteditable outlines
-      document.querySelectorAll('[contenteditable]').forEach(el => {
-        el.dataset.wasEditable = 'true';
-        el.removeAttribute('contenteditable');
-      });
-
-      const container = document.querySelector('.container');
-      const canvas = await h2c(container, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: getComputedStyle(document.body).backgroundColor,
-        width: container.scrollWidth,
-        height: container.scrollHeight,
-        scrollX: 0,
-        scrollY: -window.scrollY,
-      });
-
-      // Restore UI
-      document.querySelectorAll('.hf-fab, .hf-share, .toc').forEach(el => el.style.display = '');
-      document.querySelectorAll('[data-was-editable]').forEach(el => {
-        el.setAttribute('contenteditable', 'true');
-        delete el.dataset.wasEditable;
-      });
-
-      const link = document.createElement('a');
-      link.download = (document.title || 'guizang-page') + '.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      toast('长图已下载');
-    } catch (err) {
-      // Restore UI on error
-      document.querySelectorAll('.hf-fab, .hf-share, .toc').forEach(el => el.style.display = '');
-      document.querySelectorAll('[data-was-editable]').forEach(el => {
-        el.setAttribute('contenteditable', 'true');
-        delete el.dataset.wasEditable;
-      });
-      toast('导出失败：' + err.message);
-    }
-  });
+  // PDF / long-image export is no longer in the page: the model runs scripts/export.mjs.
 
   document.getElementById('hf-settings-toggle').addEventListener('click', (e) => {
     e.stopPropagation();

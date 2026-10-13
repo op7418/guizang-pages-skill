@@ -34,7 +34,7 @@
 
 ### v0.5 — 交互功能
 - 右下角设置面板：配色切换（3 组）+ 字体选择（3 组）
-- 右上角导出：PDF / 长图（html2canvas）/ 公众号排版（公众号排版已于 v0.8 移除）
+- 导出：v0.14 起页面内不再有导出按钮/html2canvas；PDF 与长图由模型运行 `scripts/export.mjs`（Puppeteer）完成
 - 文本 contenteditable 点击编辑
 - TOC 左侧目录 + scroll spy
 - 所有 emoji 图标替换为 Lucide SVG 内联图标

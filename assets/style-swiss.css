@@ -827,7 +827,7 @@
     .def-card-swiss, .aside-card, .process-step, blockquote { background: #f0f0ee; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .pullquote-swiss .pq-bar { background: var(--accent); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .gallery-grid, .chart-row { grid-template-columns: 1fr 1fr; }
-    .toc, .hf-fab, .hf-share, .hf-toast { display: none !important; }
+    .toc, .hf-fab { display: none !important; }
     [contenteditable] { outline: none !important; box-shadow: none !important; }
     a { color: inherit; text-decoration: none; }
   }
