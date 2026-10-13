@@ -152,6 +152,20 @@ function renderQuote(rawLines, depth = 0) {
 //   source: 数据来源       note: 说明
 //   标签 | 58             (or  标签 | 59.1 | 54.3 | 49.9  for grouped)
 // Values that are not numbers (e.g. "?" or "–") render as an empty bar marked "无数据".
+function capHtml(t) {
+  // 图注首句加粗当标题：只在括号外的第一个 。/：/—— 处切开，余下作说明
+  let depth = 0;
+  for (let i = 0; i < t.length && i < 60; i++) {
+    const c = t[i];
+    if (c === '（' || c === '(') depth++; else if (c === '）' || c === ')') depth = Math.max(0, depth - 1);
+    else if (!depth && i >= 2 && (c === '。' || c === '：' || t.startsWith('——', i))) {
+      const len = t.startsWith('——', i) ? 2 : 1; const rest = t.slice(i + len).trim();
+      if (!rest) return t;
+      return `<span class="cap-lead">${t.slice(0, i)}${c === '。' ? '。' : ''}</span>${rest}`;
+    }
+  }
+  return t;
+}
 function renderChart(lines) {
   const meta = {}; const rows = [];
   for (const raw of lines) {
@@ -255,7 +269,7 @@ for (let i = 0; i < originalLines.length; i++) {
     }
     skipUntil = j + 1;
     const radius = styleName === 'magazine' ? '3px' : '0';
-    const cap = alt => alt && !alt.startsWith('img_') ? `<figcaption>${inlineMd(escHtml(alt))}</figcaption>` : '';
+    const cap = alt => alt && !alt.startsWith('img_') ? `<figcaption>${capHtml(inlineMd(escHtml(alt)))}</figcaption>` : '';
     const one = (im, cls = '') => `<figure class="figure-card${cls}"><img src="${escHtml(im.src)}" alt="${escHtml(im.alt)}" loading="lazy" style="border-radius:${radius}" />${cap(im.alt)}</figure>`;
     if (imgs.length === 1) addBlock(one(imgs[0]));
     else if (imgs.length <= 3) addBlock(`<div class="img-row img-row-${imgs.length}">${imgs.map(im => one(im)).join('')}</div>`);
@@ -509,7 +523,7 @@ for (let i = 0; i < originalLines.length; i++) {
 
   // Figure — Unsplash/external image with caption
   if (upgrade && upgrade.type === 'figure') {
-    addBlock(`<figure class="figure-card"><img src="${upgrade.src}" alt="${escHtml(upgrade.alt || '')}" />${upgrade.caption ? `<figcaption>${escHtml(upgrade.caption)}</figcaption>` : ''}</figure>`);
+    addBlock(`<figure class="figure-card"><img src="${upgrade.src}" alt="${escHtml(upgrade.alt || '')}" />${upgrade.caption ? `<figcaption>${capHtml(escHtml(upgrade.caption))}</figcaption>` : ''}</figure>`);
     continue;
   }
 

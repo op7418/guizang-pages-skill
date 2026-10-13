@@ -1099,3 +1099,25 @@
     .section.section > p, .section.section > ul, .section.section > ol, .section.section > blockquote,
     .section.section > h3, .section.section > .section-header { max-width: var(--col) !important; margin-left: auto !important; margin-right: auto !important; }
   }
+
+  /* ── v0.16 · 视觉调研落地（中文阅读优先） ───────────────────── */
+  :root { --col: calc(32 * 1.0625rem); }
+  .section > p, .section li { line-height: 1.8 !important; text-align: justify; }
+  /* 普通引用：正文栏宽，上下发丝线，正文色，无灰底；瑞士风只用无衬线 */
+  .section.section > blockquote:not(.pullquote) {
+    border: 0 !important; border-top: 1px solid var(--fg) !important; border-bottom: 1px solid var(--line, rgba(0,0,0,.15)) !important;
+    background: none !important; padding: 16px 0 !important; color: var(--fg) !important; font-size: 1.0625rem !important; line-height: 1.8 !important; font-style: normal !important; }
+  .section.section > blockquote:not(.pullquote) p { color: var(--fg) !important; }
+  .section.section > blockquote blockquote { border-left: 2px solid var(--fg) !important; background: none !important; padding-left: 1em !important; }
+  /* 图注：首句加粗为标签，其余常规；栏内图注保持左轨 */
+  figcaption { font-size: 12px !important; line-height: 1.55 !important; text-align: left !important; letter-spacing: 0 !important; }
+  figcaption .cap-lead { display: block; font-weight: 600; color: var(--fg); margin-bottom: 2px; }
+  .img-row figcaption .cap-lead, .img-strip figcaption .cap-lead { display: inline; margin-right: .4em; }
+  /* 页眉：全宽 3px 黑线 */
+  .doc-chrome { border-bottom: 3px solid var(--fg) !important; padding-bottom: 14px !important; }
+  /* 直角、无阴影 */
+  .figure-card, .figure-card img, .hchart, .table-wrap, .media-embed, .media-embed iframe, .img-row img, .img-strip img, .highlight-swiss, .toc-panel, .chrome-tag { border-radius: 0 !important; box-shadow: none !important; }
+  /* 目录：窄编号列 + 等宽数字，不画线 */
+  .toc-item { display: grid !important; grid-template-columns: 2.4em 1fr !important; gap: 0 10px !important; border: 0 !important; }
+  .toc-num { font-variant-numeric: tabular-nums; }
+  .section.section .figure-card figcaption, .section.section figcaption { font-size: 12px !important; font-family: var(--font-sans) !important; line-height: 1.55 !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--fg-secondary, var(--fg)) !important; }
