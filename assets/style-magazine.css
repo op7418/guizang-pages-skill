@@ -16,8 +16,8 @@
     --accent: #c45a3c;
     --border: #d4d0c8;
     --border-light: #e2dfd8;
-    --font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', Georgia, serif;
-    --font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', -apple-system, sans-serif;
+    --font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Source Han Serif CN', 'Songti SC', 'STSong', Georgia, serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', 'Source Han Sans SC', sans-serif;
     --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
     --measure: 1200px;
     --gutter: 20px;
@@ -49,7 +49,7 @@
     color: var(--fg);
     background: var(--bg);
     line-height: 1.8;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.01em; /* Latin only; :lang(zh) resets to 0 */
   }
 
   ::selection {
@@ -1366,8 +1366,69 @@
   .highlight-card { box-shadow: inset 4px 0 0 var(--accent); }
   .pullquote { border-top-color: var(--accent); }
   .pullquote .accent-mark, .pullquote strong { color: var(--accent); }
-  .chrome-tag { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
-  a { text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+  /* no color-mix(): html2canvas (long-image export) can't parse color() and aborts */
+  .chrome-tag { border-color: var(--accent); }
+  a { text-decoration-color: var(--accent); }
+
+  /* ========================================
+     CJK TYPOGRAPHY — 中文排版规则（v0.8）
+     Rules + sources: references/design-rules.md §中文排版,
+     references/cjk-typography-research.md. Values here are the
+     single source of truth; change them there and here together.
+     ======================================== */
+  :root {
+    --text-size: 1.0625rem;           /* 正文字号 */
+    --text-leading: 1.85;        /* 正文行高：中文 1.5–2 倍 */
+    --text-measure: 36em;           /* 行长 ≈ 36 个汉字（推断值，见调研笔记） */
+    --para-gap: 1em;                /* 段间距：不缩进，靠段距分段（clreq 段落版式之一） */
+  }
+  :lang(zh) body {
+    letter-spacing: 0;              /* 汉字默认密排，不额外加字距 */
+    line-break: strict;             /* 避头尾：句读、闭括号等不出现在行首 */
+    word-break: normal;
+    overflow-wrap: break-word;      /* 长 URL / 长英文词允许断开，避免撑破版心 */
+    text-spacing-trim: normal;      /* 相邻标点挤压（Chrome 123+，需字体带 chws/halt） */
+    hanging-punctuation: allow-end; /* 行尾点号悬挂（目前仅 Safari） */
+    font-kerning: normal;
+  }
+  :lang(zh) .section > p,
+  :lang(zh) .section > ul,
+  :lang(zh) .section > ol,
+  :lang(zh) .section > blockquote,
+  :lang(zh) .section > h3,
+  :lang(zh) .section > .table-wrap + p {
+    max-width: var(--text-measure);
+  }
+  :lang(zh) .section > p,
+  :lang(zh) .section li {
+    font-size: var(--text-size);
+    line-height: var(--text-leading);
+    font-weight: 400;
+  }
+  :lang(zh) .section > p {
+    margin-bottom: var(--para-gap);
+    text-align: justify;            /* clreq §6.2：中文正文原则上两端对齐 */
+    text-justify: inter-character;
+  }
+  :lang(zh) .section li { margin-bottom: 0.35em; }
+  :lang(zh) .section li > p { margin-bottom: 0.35em; text-align: start; }
+  /* 汉字没有真正的斜体：*强调* 用着重号（clreq §5.3.1：横排置于字下） */
+  :lang(zh) em {
+    font-style: normal;
+    -webkit-text-emphasis: filled dot; text-emphasis: filled dot;
+    -webkit-text-emphasis-position: under right; text-emphasis-position: under right;
+  }
+  :lang(zh) em:lang(en), :lang(zh) code em { font-style: italic; text-emphasis: none; -webkit-text-emphasis: none; }
+  /* 中西文间距：render.mjs 插入 .hf-sp；支持 text-autospace 的浏览器用原生间距 */
+  .hf-sp { white-space: normal; }
+  @supports (text-autospace: normal) {
+    :lang(zh) body { text-autospace: normal; }
+    .hf-sp { display: none; }
+  }
+  /* 标题：中文不加负字距，避免笔画粘连；行高收紧 */
+  :lang(zh) h1, :lang(zh) h2, :lang(zh) h3 { letter-spacing: 0; line-break: strict; }
+  :lang(zh) h2, :lang(zh) h3 { line-height: 1.4; }
+  :lang(zh) .hero h1 { line-height: 1.3; }
 
   /* ========================================
      RESPONSIVE

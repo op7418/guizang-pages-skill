@@ -759,8 +759,42 @@ const tocScript = `
 })();
 </script>`;
 
+// ── CJK typography pass (references/design-rules.md §中文排版) ──
+// 1) Document language for :lang(zh) rules: meta.lang wins, else detect by Han ratio.
+const hanCount = (mdRaw.match(/[\u3400-\u9fff]/g) || []).length;
+const latinCount = (mdRaw.match(/[A-Za-z]/g) || []).length;
+const docLang = anno.meta.lang === 'en' ? 'en'
+  : anno.meta.lang === 'zh' ? 'zh-CN'
+  : (hanCount > latinCount * 0.25 ? 'zh-CN' : 'en');
+// 2) Han ↔ Latin/digit spacing ("盘古之白"). clreq §6.3.3: ≤ 1/4 em between Han and
+//    Western letters/numerals, none at line start/end. Chrome has no text-autospace yet,
+//    so insert a real (collapsible) space wrapped in .hf-sp where the author left none;
+//    browsers that support text-autospace hide the span and use the native spacing.
+//    Only text nodes are touched — never tags/attributes, <code>, <pre>, <script>, <svg>.
+function autospace(html) {
+  const HAN = '[\\u3400-\\u4dbf\\u4e00-\\u9fff\\uf900-\\ufaff]';
+  const LAT = '[A-Za-z0-9]';
+  const re1 = new RegExp(`(${HAN})(${LAT})`, 'g');
+  const re2 = new RegExp(`(${LAT}|%)(${HAN})`, 'g');
+  const SP = '<span class="hf-sp"> </span>';
+  let out = '', skip = 0;
+  for (const part of html.split(/(<[^>]+>)/)) {
+    if (part.startsWith('<')) {
+      const m = part.match(/^<(\/?)(code|pre|script|style|svg|kbd|textarea)\b/i);
+      if (m) skip += m[1] ? -1 : (/\/>$/.test(part) ? 0 : 1);
+      out += part;
+    } else if (skip > 0 || !part) {
+      out += part;
+    } else {
+      out += part.replace(re1, `$1${SP}$2`).replace(re2, `$1${SP}$2`);
+    }
+  }
+  return out;
+}
+if (docLang.startsWith('zh') && anno.meta.autospace !== false) bodyHtml = autospace(bodyHtml);
+
 const fullHtml = `<!DOCTYPE html>
-<html lang="zh-CN" data-hf-style="${styleName}">
+<html lang="${docLang}" data-hf-style="${styleName}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">

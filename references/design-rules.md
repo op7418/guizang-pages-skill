@@ -32,6 +32,35 @@
 - accent 线仅用在组件内部标记（blockquote 左线）
 - 不允许连续两条线相邻出现
 
+## 中文排版（v0.8 固化，可执行规则）
+
+> 实现位置：`assets/style-magazine.css` / `assets/style-swiss.css` 的「CJK TYPOGRAPHY」块 + `scripts/render.mjs` 的 CJK typography pass。
+> 依据与来源链接见 `references/cjk-typography-research.md`。改数值时两处一起改。
+
+| # | 规则 | 取值 / 实现 | 依据 |
+|---|---|---|---|
+| T1 | 文档语言 | `<html lang>` 取 `meta.lang`（`zh`/`en`），缺省按汉字占比自动判定；所有中文规则挂在 `:lang(zh)` 下，纯英文文档不受影响 | clreq 依赖语言标记做排版 |
+| T2 | 正文字号 | 17px（`--text-size: 1.0625rem`） | 设计决定：原 15.2px 对汉字偏小 |
+| T3 | 正文行高 | 杂志风 1.85，瑞士风 1.8（`--text-leading`） | 文章库《一万六千字字体与排版指南》：中文 1.5–2 倍，1.2 过密 |
+| T4 | 行长 | `max-width: 36em` ≈ 每行 36 个汉字（1440 宽屏实测 612px） | 文章库 Baymard 行长 50–75 拉丁字符、WCAG 1.4.8 ≤80；换算到汉字的 36 字为**本 skill 的推断值**；clreq 2.3.5 建议行长为字号整数倍（em 单位天然满足） |
+| T5 | 对齐 | 正文 `text-align: justify; text-justify: inter-character`；列表项内段落左对齐 | clreq §6.2 正文原则上两端对齐 |
+| T6 | 分段 | 不首行缩进，段间距 1em | clreq：段首不缩进、以段间空白分段是可接受的版式 |
+| T7 | 字距 | 中文正文与标题 `letter-spacing: 0`（英文 Latin 可保留微调） | 汉字为等宽方块，额外字距破坏密排；标题负字距会导致笔画粘连 |
+| T8 | 避头尾 | `line-break: strict` | clreq §6.1.1 行首行尾禁则 |
+| T9 | 标点挤压 | `text-spacing-trim: normal`（Chrome 123+，需字体带 `chws`/`halt`）；`hanging-punctuation: allow-end`（仅 Safari） | clreq 标点宽度调整 |
+| T10 | 中西文间距 | render.mjs 在汉字与拉丁字母/数字之间（作者未留空格处）插入 `<span class="hf-sp"> </span>`；`%` 后同样加，`%`/`°` 前不加；只处理文本节点，跳过 `code/pre/kbd/script/style/svg/textarea` 和所有属性；支持 `text-autospace` 的浏览器（Firefox 145+、Safari 27+）隐藏该 span 改用原生间距。`meta.autospace: false` 可关闭 | clreq §6.3.3（≤1/4em，行首行尾不加）；《中文文案排版指北》；X 上 @AkinoNya 等讨论 text-autospace |
+| T11 | 长串断行 | `overflow-wrap: break-word`，长 URL 不撑破版心 | 周刊里大量裸链接 |
+| T12 | 强调 | 中文 `*强调*` 不用伪斜体，改着重号：`text-emphasis: filled dot`，横排在字下（`under right`）；英文 `em:lang(en)` 和代码中仍为斜体 | clreq §5.3.1 |
+| T13 | 字体栈 | 西文在前、中文在后：`Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', 'Source Han Sans SC', sans-serif`；衬线：`'Noto Serif SC', 'Source Han Serif SC', 'Source Han Serif CN', 'Songti SC', 'STSong', Georgia, serif` | 文章库《最标准的系统字体规范 font-family》《Web 开发中文字体指南》 |
+| T14 | 标题字重 | 中文标题至少 300（瑞士风原 200 对苹方/思源细体在 1x 屏发虚）；标题行高 1.4（h2/h3），杂志 hero 1.3 | **设计决定**；X @Jtxccjdbb：中文对字重与行高更敏感 |
+
+### 写作侧（Markdown 作者遵守，渲染器不改写）
+- 用全角中文标点，不重复标点（！！、？？），数字用半角。
+- 数字与单位之间留空格（10 GB），度数与百分比不留（90%、20°）。
+- 全角标点与其他字符之间不加空格。
+- 专有名词保持官方大小写（GitHub、iPhone）。
+来源：《中文文案排版指北》。
+
 ## 杂志风 (Magazine) 专有规则
 
 ### 色彩
