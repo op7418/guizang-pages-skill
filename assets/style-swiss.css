@@ -929,3 +929,62 @@
   .toc-panel { border-right: 1px solid rgba(0,0,0,0.07); }
   .section-header .section-number { color: var(--accent-deep) !important; opacity: 1; }
   .img-row > .figure-card { grid-column: auto !important; min-width: 0; }
+
+  /* ===== v0.11 · 原生表格 + 原生条形图（纯 HTML/CSS，可导出 PDF/长图，跟随色板） ===== */
+  .section > .hchart { max-width: var(--wide) !important; }
+  .table-wrap { overflow-x: auto; margin-top: 2em; margin-bottom: 2em; }
+  .table-wrap table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.9rem; }
+  .table-wrap th { text-align: left; font-weight: 600; color: var(--fg); padding: 10px 12px; border-bottom: 1.5px solid var(--fg); vertical-align: bottom; line-height: 1.35; }
+  .table-wrap td { padding: 9px 12px; color: var(--fg); border-bottom: 1px solid var(--tbl-line, rgba(0,0,0,0.09)); vertical-align: top; line-height: 1.45; background: none; }
+  .table-wrap tbody tr:nth-child(even) td { background: var(--tbl-zebra, rgba(0,0,0,0.025)); }
+  .table-wrap .al-num, .table-wrap .al-right { text-align: right; white-space: nowrap; }
+  .table-wrap .al-center { text-align: center; }
+  .table-wrap td strong { color: var(--accent-ink, var(--accent)); font-weight: 700; }
+  .table-wrap td small, .table-wrap td .sub { color: var(--fg-tertiary); font-size: 0.78em; }
+  .table-caption { caption-side: top; font-size: 0.8rem; color: var(--fg-secondary); margin-bottom: 10px; line-height: 1.5; }
+  .hchart { margin-top: 2.2em; margin-bottom: 2.2em; padding: 24px 28px; background: var(--bg-card); }
+  .hc-title { font-weight: 600; font-size: 1rem; color: var(--fg); margin-bottom: 16px; }
+  .hc-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 14px; font-size: 0.78rem; color: var(--fg-secondary); }
+  .hc-key i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; background: var(--hc-mute); }
+  .hc-row { display: grid; grid-template-columns: minmax(120px, 30%) 1fr; gap: 12px; align-items: center; padding: 3px 0; }
+  .hc-group { padding: 8px 0; border-top: 1px solid var(--tbl-line, rgba(0,0,0,0.08)); }
+  .hc-label { font-size: 0.82rem; color: var(--fg); line-height: 1.35; }
+  .hc-bars { display: grid; gap: 3px; }
+  .hc-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 18px; }
+  .hc-group .hc-bar { height: 13px; }
+  .hc-fill { display: block; height: 100%; background: var(--hc-mute); flex: none; }
+  .hc-val { font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--fg-secondary); white-space: nowrap; }
+  .hc-group .hc-val { font-size: 0.68rem; }
+  .hc-hi .hc-fill, .hc-hi.hc-key i, .hc-key.hc-hi i { background: var(--accent); }
+  .hc-hi .hc-val, .hc-row.hc-hi .hc-label { color: var(--fg); font-weight: 600; }
+  .hc-s1.hc-hi .hc-fill, .hc-key.hc-s1.hc-hi i { background: var(--accent); opacity: 0.6; }
+  .hc-na .hc-val { color: var(--fg-tertiary); font-style: italic; }
+  .hc-cap { margin-top: 14px; font-size: 0.72rem; color: var(--fg-tertiary); line-height: 1.5; }
+  :root { --hc-mute: #b9b6ae; }
+  @media (max-width: 640px) { .hc-row { grid-template-columns: 1fr; gap: 4px; } .hchart { padding: 18px; } }
+  @media print { .hchart, .table-wrap tr { break-inside: avoid; } }
+
+  /* ===== 引用可读性：正文色 + 极浅底；普通引用回到正文宽度，只有强调组件破出 ===== */
+  .section > blockquote { max-width: var(--col) !important; }
+  blockquote p, blockquote li { color: var(--fg) !important; }
+  blockquote .bq-cite { color: var(--fg-secondary) !important; }
+  blockquote { background: var(--quote-tint, rgba(0,0,0,0.025)) !important; border-left: 2px solid var(--fg-placeholder) !important; }
+  blockquote p { font-size: 1rem !important; line-height: 1.75 !important; }
+  .hchart { border-radius: 0; }
+  :root { --hc-mute: #c9c9c6; }
+
+  /* ===== v0.11 swiss：hero 标题加宽；悬挂章节号浅灰；标题细、正文常规 ===== */
+  .hero-cover h1 { max-width: 960px !important; }
+  .hero-cover .hero-subtitle { max-width: 820px !important; }
+  .section-header .section-number { color: var(--num-grey, #c8c8c4) !important; font-weight: 300 !important; }
+  :lang(zh) h2, h2 { font-weight: 200 !important; }
+  h3 { font-weight: 400; }
+  :lang(zh) .hero-cover h1, .hero-cover h1 { font-weight: 200 !important; }
+  .section p, .section li, .section td, blockquote p { font-weight: 400 !important; }
+  .table-wrap th { background: none !important; color: var(--fg) !important; }
+  .table-wrap th { font-family: var(--font-sans) !important; text-transform: none !important; letter-spacing: 0 !important; font-size: 0.78rem !important; white-space: normal !important; }
+  .table-wrap table { table-layout: auto; min-width: 0 !important; }
+  .table-wrap td:first-child { white-space: nowrap; }
+  .table-caption, .hc-cap { font-family: var(--font-sans) !important; text-transform: none !important; letter-spacing: 0 !important; text-align: left !important; }
+  .table-wrap > table { margin: 0 !important; }
+  .hero.hero-cover > * { max-width: none !important; width: 100%; justify-self: stretch; }

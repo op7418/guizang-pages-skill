@@ -144,6 +144,45 @@ function renderQuote(rawLines, depth = 0) {
   return `<blockquote${cls}>${inner}${cite ? `<footer class="bq-cite"><span class="dash">——</span><cite>${inlineMd(cite)}</cite></footer>` : ''}</blockquote>`;
 }
 
+// ── Native bar chart (```chart fenced block) — pure HTML/CSS, no JS/canvas, so it survives
+// PDF + long-image export and follows the theme colours.
+//   title: 标题            unit: %            max: 100 (optional, default = max value)
+//   series: A, B, C       (optional; enables grouped bars, one value per series per row)
+//   highlight: 名称1, 名称2 (rows or series to draw in accent colour)
+//   source: 数据来源       note: 说明
+//   标签 | 58             (or  标签 | 59.1 | 54.3 | 49.9  for grouped)
+// Values that are not numbers (e.g. "?" or "–") render as an empty bar marked "无数据".
+function renderChart(lines) {
+  const meta = {}; const rows = [];
+  for (const raw of lines) {
+    const l = raw.trim(); if (!l) continue;
+    const m = l.match(/^(title|unit|max|series|highlight|source|note)\s*[:：]\s*(.*)$/i);
+    if (m && !l.includes('|')) { meta[m[1].toLowerCase()] = m[2].trim(); continue; }
+    const parts = l.split('|').map(x => x.trim());
+    rows.push({ label: parts[0], vals: parts.slice(1) });
+  }
+  const series = meta.series ? meta.series.split(/\s*[,，]\s*/) : null;
+  const hi = new Set((meta.highlight || '').split(/\s*[,，]\s*/).filter(Boolean));
+  const unit = meta.unit || '';
+  const nums = rows.flatMap(r => r.vals.map(v => parseFloat(v))).filter(v => !isNaN(v));
+  const max = parseFloat(meta.max) || Math.max(...nums, 0) || 1;
+  const bar = (v, cls, label) => {
+    const n = parseFloat(v); const ok = !isNaN(n);
+    const w = ok ? Math.max(0.5, n / max * 100) : 0;
+    return `<div class="hc-bar ${cls}${ok ? '' : ' hc-na'}"${label ? ` title="${escHtml(label)}"` : ''}><span class="hc-fill" style="width:${w.toFixed(2)}%"></span><span class="hc-val">${ok ? escHtml(v.replace(/[*]/g, '')) + (unit && !/%$/.test(v) ? unit : '') : '无数据'}</span></div>`;
+  };
+  let body = '';
+  if (series) {
+    body += `<div class="hc-legend">${series.map((s, k) => `<span class="hc-key hc-s${k}${hi.has(s) ? ' hc-hi' : ''}"><i></i>${escHtml(s)}</span>`).join('')}</div>`;
+    for (const r of rows) {
+      body += `<div class="hc-row hc-group"><div class="hc-label">${inlineMd(r.label)}</div><div class="hc-bars">${series.map((s, k) => bar(r.vals[k] ?? '', `hc-s${k}${hi.has(s) ? ' hc-hi' : ''}`, s)).join('')}</div></div>`;
+    }
+  } else {
+    for (const r of rows) body += `<div class="hc-row${hi.has(r.label) ? ' hc-hi' : ''}"><div class="hc-label">${inlineMd(r.label)}</div><div class="hc-bars">${bar(r.vals[0] ?? '', hi.has(r.label) ? 'hc-hi' : '')}</div></div>`;
+  }
+  return `<figure class="hchart${series ? ' hchart-grouped' : ''}">${meta.title ? `<div class="hc-title">${inlineMd(meta.title)}</div>` : ''}<div class="hc-body">${body}</div>${meta.source || meta.note ? `<figcaption class="hc-cap">${meta.note ? inlineMd(meta.note) + ' ' : ''}${meta.source ? '来源：' + inlineMd(meta.source) : ''}</figcaption>` : ''}</figure>`;
+}
+
 // ── Main render loop ──
 const sections = [];
 let currentSection = null;
@@ -248,40 +287,43 @@ for (let i = 0; i < originalLines.length; i++) {
       j++;
     }
     skipUntil = j + 1;
+    if (lang === 'chart') { addBlock(renderChart(codeLines)); continue; }
     addBlock(`<pre><code${lang ? ` class="language-${escHtml(lang)}"` : ''}>${escHtml(codeLines.join('\n'))}</code></pre>`);
     continue;
   }
 
   // ── Markdown pipe tables ( | col | col | ) ──
+  // Alignment from the separator row (:--, :-:, --:), numeric columns auto right-aligned with
+  // tabular figures, optional caption line directly after the table: "表：…" / "Table: …".
   if (/^\|(.+)\|$/.test(trimmed)) {
     let tableLines = [trimmed];
     let j = i + 1;
-    while (j < originalLines.length) {
-      const nextTrimmed = originalLines[j].trim();
-      if (/^\|(.+)\|$/.test(nextTrimmed)) {
-        tableLines.push(nextTrimmed);
-        j++;
-      } else if (nextTrimmed === '') {
-        j++;
-        break;
-      } else {
-        break;
-      }
-    }
-    skipUntil = j + 1;
-    // Parse: first line = header, second line = separator (skip), rest = body
-    const parseRow = (row) => row.split('|').slice(1, -1).map(c => c.trim());
+    while (j < originalLines.length && /^\|(.+)\|$/.test(originalLines[j].trim())) { tableLines.push(originalLines[j].trim()); j++; }
+    let caption = '';
+    if (j < originalLines.length && /^(表|Table|数据来源|来源|Source)\s*[:：]/i.test(originalLines[j].trim())) { caption = originalLines[j].trim(); j++; }
+    skipUntil = j + 1; // j is the first unconsumed line (0-based) → 1-based j+1
+    const parseRow = (row) => row.replace(/\\\|/g, '\u0000').split('|').slice(1, -1).map(c => c.trim().replace(/\u0000/g, '|'));
     const headers = parseRow(tableLines[0]);
-    const bodyRows = tableLines.filter((_, idx) => idx >= 2).map(parseRow);
-    let tableHtml = '<div class="table-wrap"><table><thead><tr>';
-    headers.forEach(h => { tableHtml += `<th>${inlineMd(h)}</th>`; });
+    const sep = tableLines[1] && /^[\s|:\-]+$/.test(tableLines[1]) ? parseRow(tableLines[1]) : null;
+    const bodyRows = tableLines.slice(sep ? 2 : 1).map(parseRow);
+    const isNum = c => /^[-+]?[\d.,]+\s*%?[*†‡]?$|^[–—-]$|^\*\*[-+]?[\d.,]+%?\*\*$/.test(c.trim());
+    const align = headers.map((_, k) => {
+      const sp = sep && sep[k] || '';
+      if (/^:-+:$/.test(sp)) return 'center';
+      if (/-+:$/.test(sp)) return 'right';
+      if (/^:-+$/.test(sp)) return 'left';
+      const col = bodyRows.map(r => r[k] || '').filter(Boolean);
+      return col.length && col.every(c => isNum(c.split(/\s*\/\s*|<br>/)[0])) ? 'num' : '';
+    });
+    let tableHtml = `<figure class="table-wrap">${caption ? `<figcaption class="table-caption">${inlineMd(caption)}</figcaption>` : ''}<table><thead><tr>`;
+    headers.forEach((h, k) => { tableHtml += `<th${align[k] ? ` class="al-${align[k]}"` : ''}>${inlineMd(h)}</th>`; });
     tableHtml += '</tr></thead><tbody>';
     bodyRows.forEach(row => {
       tableHtml += '<tr>';
-      row.forEach(cell => { tableHtml += `<td>${inlineMd(cell)}</td>`; });
+      row.forEach((cell, k) => { tableHtml += `<td${align[k] ? ` class="al-${align[k]}"` : ''}>${inlineMd(cell)}</td>`; });
       tableHtml += '</tr>';
     });
-    tableHtml += '</tbody></table></div>';
+    tableHtml += '</tbody></table></figure>';
     addBlock(tableHtml);
     continue;
   }
@@ -607,7 +649,20 @@ bodyHtml += `
 `;
 
 // Hero — Swiss uses cover card with configurable image
-const heroImg = meta.hero_image || 'https://images.unsplash.com/photo-1509023464722-18d996393ca8?w=1400&h=600&fit=crop';
+// Hero image: must be a photograph / video frame, never a chart, table or screenshot of text.
+// If meta.hero_image is missing, "auto", or looks like a chart/table, pick the first local image
+// whose filename + alt don't look like data graphics, preferring 照片/视频截图/photo/frame.
+const NOT_HERO = /(chart|table|index|bench|score|graph|plot|diagram|highlight|screenshot-of-text|图表|表格|评测|基准|指数|榜|博客|blog|官方)/i;
+const PREFER_HERO = /(photo|frame|照片|视频截图|现场|全景|wide)/i;
+function pickHero() {
+  const cands = [];
+  originalLines.forEach(l => { for (const m of l.matchAll(/!\[([^\]]*)\]\(([^)]+)\)/g)) cands.push({ alt: m[1], src: m[2] }); });
+  const ok = cands.filter(c => !NOT_HERO.test(c.src + ' ' + c.alt));
+  return (ok.find(c => PREFER_HERO.test(c.src + ' ' + c.alt)) || ok[0] || {}).src;
+}
+let heroImg = meta.hero_image;
+if (!heroImg || heroImg === 'auto' || (NOT_HERO.test(heroImg) && !meta.hero_force)) heroImg = pickHero() || heroImg;
+heroImg = heroImg || 'https://images.unsplash.com/photo-1509023464722-18d996393ca8?w=1400&h=600&fit=crop';
 if (isSwiss) {
   bodyHtml += `
 <header class="hero hero-cover">
