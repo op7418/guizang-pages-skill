@@ -1649,11 +1649,7 @@
   .section > h2 + .divider, .section > hr.divider { display: none; }
   .section > h3 { font-family: var(--font-serif); font-style: italic; font-weight: 600; text-align: center; }
 
-  /* 首字下沉：每节第一段 */
-  .section > h2 + p::first-letter, .section > h2 ~ p:first-of-type::first-letter {
-    float: left; font-family: var(--font-serif); font-weight: 700; font-size: 3.6em; line-height: 0.92;
-    margin: 0.08em 0.14em 0 0; color: var(--accent-ink, var(--accent));
-  }
+
 
   /* 图注：居中斜体衬线 */
   .figure-card figcaption, .hc-cap, .table-caption { font-family: var(--font-serif) !important; font-style: italic; text-align: center !important; font-size: 0.85rem !important; color: var(--fg-secondary) !important; }
@@ -1684,3 +1680,12 @@
   .section > .section-number { --orn: "✦"; }
   .section > .section-number span.orn { opacity: 0.7; }
   .section { border-bottom: none !important; padding-top: 72px !important; }
+
+  /* v0.15 · 首字下沉已删除（不适合中文）；章节号 = “04” + 右侧逐渐变小变淡的星，无横线 */
+  .section > .section-number { gap: 0 !important; align-items: baseline !important; }
+  .section > .section-number::before, .section > .section-number::after { content: none !important; display: none !important; }
+  .section > .section-number .sn-num { font-size: 1.05rem; letter-spacing: 0.12em; margin-right: 10px; }
+  .section > .section-number .sn-star { display: inline-block; line-height: 1; margin-right: 5px; }
+  .section > .section-number .s1 { font-size: 0.95rem; opacity: 0.9; }
+  .section > .section-number .s2 { font-size: 0.72rem; opacity: 0.65; }
+  .section > .section-number .s3 { font-size: 0.52rem; opacity: 0.42; }
