@@ -1,0 +1,30 @@
+{
+  "swiss": {
+    "colors": [
+      { "name": "IKB Blue", "accent": "#002FA7", "accentBright": "#5B7BFF", "accentOn": "#ffffff" },
+      { "name": "Cadmium Yellow", "accent": "#FFD500", "accentBright": "#FFE34D", "accentOn": "#0a0a0a" },
+      { "name": "Safety Orange", "accent": "#FF6B35", "accentBright": "#FF9A6C", "accentOn": "#ffffff" },
+      { "name": "Highlighter Green", "accent": "#C5E803", "accentBright": "#D4F040", "accentOn": "#0a0a0a" }
+    ],
+    "fontVar": "--font-sans",
+    "fonts": [
+      { "name": "Inter", "family": "'Inter','Helvetica Neue','PingFang SC','Noto Sans SC',sans-serif", "google": "Inter:wght@200;300;400;500;600;700" },
+      { "name": "DM Sans", "family": "'DM Sans','PingFang SC','Noto Sans SC',sans-serif", "google": "DM+Sans:wght@300;400;500;600;700" },
+      { "name": "Space Grotesk", "family": "'Space Grotesk','PingFang SC','Noto Sans SC',sans-serif", "google": "Space+Grotesk:wght@300;400;500;600;700" }
+    ]
+  },
+  "magazine": {
+    "colors": [
+      { "name": "Terracotta", "accent": "#c45a3c", "accentOn": "#ffffff" },
+      { "name": "Forest", "accent": "#3d6b4f", "accentOn": "#ffffff" },
+      { "name": "Indigo", "accent": "#3f4d8c", "accentOn": "#ffffff" },
+      { "name": "Charcoal", "accent": "#4a4a4a", "accentOn": "#ffffff" }
+    ],
+    "fontVar": "--font-serif",
+    "fonts": [
+      { "name": "Noto Serif SC", "family": "'Noto Serif SC','Source Han Serif SC','Songti SC',Georgia,serif", "google": "Noto+Serif+SC:wght@400;600;700" },
+      { "name": "Playfair Display", "family": "'Playfair Display','Noto Serif SC','Songti SC',Georgia,serif", "google": "Playfair+Display:wght@400;600;700" },
+      { "name": "Source Serif 4", "family": "'Source Serif 4','Noto Serif SC','Songti SC',Georgia,serif", "google": "Source+Serif+4:wght@400;600;700" }
+    ]
+  }
+}

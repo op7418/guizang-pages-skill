@@ -10,7 +10,8 @@
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { fileURLToPath } from 'url';
+import { resolve, dirname } from 'path';
 
 const args = process.argv.slice(2);
 const styleIdx = args.indexOf('--style');
@@ -579,15 +580,56 @@ bodyHtml += `
 `;
 
 // ── Load CSS based on style flag ──
-const scriptDir = import.meta.dirname || '.';
+// import.meta.dirname only exists on Node >= 20.11; older Node used to fall back to '.'
+// and then silently skip ui.css/ui.js (empty try/catch) -> no buttons. Resolve robustly.
+const scriptDir = import.meta.dirname || dirname(fileURLToPath(import.meta.url));
 let assetsDir = resolve(scriptDir, '..', 'assets');
 if (!existsSync(assetsDir)) assetsDir = scriptDir;
 const cssFile = styleName === 'swiss' ? 'style-swiss.css' : 'style-magazine.css';
 const css = readFileSync(resolve(assetsDir, cssFile), 'utf-8');
-let uiCss = '', uiJs = '', wechatJs = '';
-try { uiCss = readFileSync(resolve(assetsDir, 'ui.css'), 'utf-8'); } catch {}
+function readAsset(name) {
+  const p = resolve(assetsDir, name);
+  if (!existsSync(p)) { console.error(`✗ missing asset: ${p}`); process.exit(1); }
+  return readFileSync(p, 'utf-8');
+}
+const uiCss = readAsset('ui.css');
+const uiJs = readAsset('ui.js');
+const themes = JSON.parse(readAsset('themes.json'));
+const theme = themes[styleName] || themes.swiss;
+let wechatJs = '';
 try { wechatJs = readFileSync(resolve(assetsDir, 'wechat-export.js'), 'utf-8'); } catch {}
-try { uiJs = readFileSync(resolve(assetsDir, 'ui.js'), 'utf-8'); } catch {}
+
+// Static UI markup (export button + settings FAB). Rendered into the HTML itself so the
+// controls exist even before/without JS; ui.js only wires up behaviour.
+const ICON = {
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>',
+  pdf: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+  image: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+  sliders: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>',
+};
+const attr = v => String(v).replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+const uiMarkup = `
+<div class="hf-share">
+  <button class="hf-share-btn" id="hf-share-toggle" type="button" aria-haspopup="true">${ICON.arrow}EXPORT</button>
+  <div class="hf-dropdown" id="hf-share-dropdown">
+    <button class="hf-dropdown-item" id="hf-export-pdf" type="button">${ICON.pdf}导出 PDF</button>
+    <button class="hf-dropdown-item" id="hf-export-image" type="button">${ICON.image}导出长图</button>
+    <div class="hf-dropdown-divider"></div>
+    <button class="hf-dropdown-item" id="hf-copy-wechat" type="button">复制公众号排版</button>
+  </div>
+</div>
+<div class="hf-fab">
+  <button class="hf-fab-btn" id="hf-settings-toggle" type="button" title="设置" aria-haspopup="true">${ICON.sliders}</button>
+  <div class="hf-dropdown" id="hf-settings-dropdown">
+    <div class="hf-dropdown-label">配色</div>
+    <div class="hf-swatches">${theme.colors.map((c, i) =>
+      `<button type="button" class="hf-swatch${i === 0 ? ' active' : ''}" data-accent="${c.accent}" data-accent-bright="${c.accentBright || ''}" data-accent-on="${c.accentOn || '#ffffff'}" style="background:${c.accent}" title="${attr(c.name)}" aria-label="${attr(c.name)}"></button>`).join('')}</div>
+    <div class="hf-dropdown-divider"></div>
+    <div class="hf-dropdown-label">字体</div>
+    <div class="hf-font-options">${theme.fonts.map((f, i) =>
+      `<button type="button" class="hf-font-option${i === 0 ? ' active' : ''}" data-var="${theme.fontVar}" data-family="${attr(f.family)}" data-google="${attr(f.google || '')}"><span class="font-preview" style="font-family:${attr(f.family)}">${styleName === 'magazine' ? '衬线 Aa' : '黑体 Aa'}</span><span class="font-name">${attr(f.name)}</span></button>`).join('')}</div>
+  </div>
+</div>`;
 
 const fontsHref = styleName === 'swiss'
   ? 'https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=Noto+Sans+SC:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap'
@@ -726,6 +768,7 @@ ${bodyHtml}
 </div>
 ${chartScript}
 ${tocScript}
+${uiMarkup}
 ${wechatJs ? `<script>${wechatJs}</script>` : ''}
 <script>${uiJs}</script>
 </body>

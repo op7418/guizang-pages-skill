@@ -1336,6 +1336,23 @@
   }
 
   /* ========================================
+     ACCENT CARRIERS
+     The settings-panel colour switch only changes --accent. Earlier the
+     magazine theme used --accent almost nowhere visible, so switching
+     looked like it did nothing. These are the places the accent shows.
+     ======================================== */
+  .section-number,
+  .section-header .section-number { color: var(--accent); }
+  blockquote { border-left-color: var(--accent); }
+  li::marker { color: var(--accent); }
+  .process-num { color: var(--accent); }
+  .highlight-card { box-shadow: inset 4px 0 0 var(--accent); }
+  .pullquote { border-top-color: var(--accent); }
+  .pullquote .accent-mark, .pullquote strong { color: var(--accent); }
+  .chrome-tag { border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+  a { text-decoration-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+
+  /* ========================================
      RESPONSIVE
      ======================================== */
   /* Tablet: collapse to single column */

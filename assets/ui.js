@@ -1,38 +1,11 @@
 (function () {
   'use strict';
 
-  // ── Theme config ──
-  const THEMES = {
-    swiss: {
-      colors: [
-        { name: 'IKB Blue', accent: '#002FA7', accentBright: '#5B7BFF' },
-        { name: 'Cadmium Yellow', accent: '#FFD500', accentBright: '#FFE34D', accentOn: '#0a0a0a' },
-        { name: 'Safety Orange', accent: '#FF6B35', accentBright: '#FF9A6C' },
-        { name: 'Highlighter Green', accent: '#C5E803', accentBright: '#D4F040', accentOn: '#0a0a0a' },
-      ],
-      fonts: [
-        { name: 'Inter', family: "'Inter','Helvetica Neue','Noto Sans SC',sans-serif", weight: '200' },
-        { name: 'DM Sans', family: "'DM Sans','Noto Sans SC',sans-serif", weight: '300' },
-        { name: 'Space Grotesk', family: "'Space Grotesk','Noto Sans SC',sans-serif", weight: '300' },
-      ],
-    },
-    magazine: {
-      colors: [
-        { name: 'Terracotta', accent: '#c45a3c' },
-        { name: 'Forest', accent: '#3d6b4f' },
-        { name: 'Indigo', accent: '#3f4d8c' },
-        { name: 'Charcoal', accent: '#4a4a4a' },
-      ],
-      fonts: [
-        { name: 'Noto Serif', family: "'Noto Serif SC','Source Han Serif SC','Songti SC',Georgia,serif", weight: '700' },
-        { name: 'Playfair', family: "'Playfair Display','Noto Serif SC',Georgia,serif", weight: '700' },
-        { name: 'Source Serif', family: "'Source Serif 4','Noto Serif SC',Georgia,serif", weight: '700' },
-      ],
-    },
-  };
-
+  // Theme options live in assets/themes.json; render.mjs writes the controls
+  // into the HTML statically, so this file only wires up behaviour.
   const style = document.documentElement.dataset.hfStyle || 'swiss';
-  const theme = THEMES[style] || THEMES.swiss;
+  const $ = (id) => document.getElementById(id);
+  const STORE = 'hf-page-prefs:' + style;
 
   // ── Helpers ──
   function toast(msg) {
@@ -69,37 +42,12 @@
     });
   }
 
-  // ── Share / Export button (top-right) ──
-  // Lucide icons: arrow-up-right, file-text, image, clipboard-copy
-  const shareHtml = `
-    <div class="hf-share">
-      <button class="hf-share-btn" id="hf-share-toggle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
-        EXPORT
-      </button>
-      <div class="hf-dropdown" id="hf-share-dropdown">
-        <button class="hf-dropdown-item" id="hf-export-pdf">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          导出 PDF
-        </button>
-        <button class="hf-dropdown-item" id="hf-export-image">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-          导出长图
-        </button>
-        <div class="hf-dropdown-divider"></div>
-        <button class="hf-dropdown-item" id="hf-copy-wechat">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          复制公众号排版
-        </button>
-      </div>
-    </div>`;
-  document.body.insertAdjacentHTML('beforeend', shareHtml);
-
   document.getElementById('hf-share-toggle').addEventListener('click', (e) => {
     e.stopPropagation();
     const dd = document.getElementById('hf-share-dropdown');
+    const wasOpen = dd.classList.contains('open');
     closeAllDropdowns();
-    dd.classList.toggle('open');
+    if (!wasOpen) dd.classList.add('open');
   });
 
   // PDF: use browser print dialog
@@ -205,74 +153,62 @@
     }
   });
 
-  // ── Settings FAB (bottom-right) ──
-  // Lucide: sliders-horizontal icon
-  const colorSwatches = theme.colors.map((c, i) =>
-    `<div class="hf-swatch${i === 0 ? ' active' : ''}" data-accent="${c.accent}" data-accent-bright="${c.accentBright || ''}" data-accent-on="${c.accentOn || '#ffffff'}" style="background:${c.accent}" title="${c.name}"></div>`
-  ).join('');
-
-  const fontOptions = theme.fonts.map((f, i) =>
-    `<button class="hf-font-option${i === 0 ? ' active' : ''}" data-family="${f.family}" data-weight="${f.weight}">
-      <span class="font-preview" style="font-family:${f.family}">${style === 'magazine' ? '衬线' : 'Aa'}</span>
-      <span class="font-name">${f.name}</span>
-    </button>`
-  ).join('');
-
-  const fabHtml = `
-    <div class="hf-fab">
-      <button class="hf-fab-btn" id="hf-settings-toggle" title="设置">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-      </button>
-      <div class="hf-dropdown" id="hf-settings-dropdown">
-        <div class="hf-dropdown-label">配色</div>
-        <div class="hf-swatches">${colorSwatches}</div>
-        <div class="hf-dropdown-divider"></div>
-        <div class="hf-dropdown-label">字体</div>
-        <div class="hf-font-options">${fontOptions}</div>
-      </div>
-    </div>`;
-  document.body.insertAdjacentHTML('beforeend', fabHtml);
-
   document.getElementById('hf-settings-toggle').addEventListener('click', (e) => {
     e.stopPropagation();
     const dd = document.getElementById('hf-settings-dropdown');
+    const wasOpen = dd.classList.contains('open');
     closeAllDropdowns();
-    dd.classList.toggle('open');
+    if (!wasOpen) dd.classList.add('open');
   });
 
-  // Color switching
-  document.querySelectorAll('.hf-swatch').forEach(swatch => {
-    swatch.addEventListener('click', () => {
-      document.querySelectorAll('.hf-swatch').forEach(s => s.classList.remove('active'));
-      swatch.classList.add('active');
-      const root = document.documentElement;
-      root.style.setProperty('--accent', swatch.dataset.accent);
-      if (swatch.dataset.accentBright) root.style.setProperty('--accent-bright', swatch.dataset.accentBright);
-      root.style.setProperty('--accent-on', swatch.dataset.accentOn);
-    });
-  });
-
-  // Font switching
-  document.querySelectorAll('.hf-font-option').forEach(opt => {
-    opt.addEventListener('click', () => {
-      document.querySelectorAll('.hf-font-option').forEach(o => o.classList.remove('active'));
-      opt.classList.add('active');
-      const root = document.documentElement;
-      if (style === 'magazine') {
-        root.style.setProperty('--font-serif', opt.dataset.family);
-      } else {
-        root.style.setProperty('--font-sans', opt.dataset.family);
-      }
-      const fontName = opt.querySelector('.font-name').textContent;
-      if (!document.querySelector(`link[data-hf-font="${fontName}"]`)) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.dataset.hfFont = fontName;
-        link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fontName)}:wght@200;300;400;500;600;700;800&display=swap`;
-        document.head.appendChild(link);
-      }
-    });
-  });
+  // ── Color switching ──
+  // Old bug: magazine CSS only used --accent in ~10 low-visibility places
+  // (hover states, a 10px label), so switching looked like "nothing happens".
+  // style-magazine.css now routes section numbers, quote rules, list markers,
+  // highlight labels etc. through --accent; this just sets the variables.
+  function applyAccent(sw) {
+    document.querySelectorAll('.hf-swatch').forEach(s => s.classList.toggle('active', s === sw));
+    const root = document.documentElement;
+    root.style.setProperty('--accent', sw.dataset.accent);
+    if (sw.dataset.accentBright) root.style.setProperty('--accent-bright', sw.dataset.accentBright);
+    else root.style.removeProperty('--accent-bright');
+    root.style.setProperty('--accent-on', sw.dataset.accentOn || '#ffffff');
+  }
+  // ── Font switching ──
+  // Old bug: Google Fonts URL was built from the display name with weights 200–800;
+  // "Noto Serif"/"Source Serif" are not real family names and Playfair has no 200,
+  // so the CSS request 400'd and the font never changed. Each option now carries
+  // an exact Google Fonts query (themes.json).
+  function applyFont(opt) {
+    document.querySelectorAll('.hf-font-option').forEach(o => o.classList.toggle('active', o === opt));
+    document.documentElement.style.setProperty(opt.dataset.var || '--font-sans', opt.dataset.family);
+    const q = opt.dataset.google;
+    if (q && !document.querySelector(`link[data-hf-font="${q}"]`)) {
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.dataset.hfFont = q;
+      link.href = `https://fonts.googleapis.com/css2?family=${q}&display=swap`;
+      document.head.appendChild(link);
+    }
+  }
+  function save() {
+    try {
+      const sw = document.querySelector('.hf-swatch.active');
+      const fo = document.querySelector('.hf-font-option.active');
+      localStorage.setItem(STORE, JSON.stringify({ accent: sw && sw.dataset.accent, font: fo && fo.dataset.family }));
+    } catch (e) {}
+  }
+  document.querySelectorAll('.hf-swatch').forEach(sw => sw.addEventListener('click', (e) => { e.stopPropagation(); applyAccent(sw); save(); }));
+  document.querySelectorAll('.hf-font-option').forEach(opt => opt.addEventListener('click', (e) => { e.stopPropagation(); applyFont(opt); save(); }));
+  try {
+    const prefs = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (prefs) {
+      const sw = [...document.querySelectorAll('.hf-swatch')].find(s => s.dataset.accent === prefs.accent);
+      if (sw && !sw.classList.contains('active')) applyAccent(sw);
+      const fo = [...document.querySelectorAll('.hf-font-option')].find(o => o.dataset.family === prefs.font);
+      if (fo && !fo.classList.contains('active')) applyFont(fo);
+    }
+  } catch (e) {}
 
   // ── Editable text ──
   const editableSelectors = [
