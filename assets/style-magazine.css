@@ -1676,3 +1676,11 @@
   .hchart { background: none !important; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding-left: 0 !important; padding-right: 0 !important; }
   .hc-title { text-align: center; font-family: var(--font-serif); font-size: 1.1rem !important; }
   .hc-legend { justify-content: center; }
+
+  /* v0.13 · 章节头只有两件：一行“细线 ✦ 04 ✦ 细线”花饰编号 + 标题 */
+  .section::before { content: none !important; }
+  .section > .section-number { display: flex !important; align-items: center; justify-content: center; gap: 14px; font-style: normal !important; letter-spacing: 0.18em !important; font-size: 0.9rem !important; margin-bottom: 18px !important; }
+  .section > .section-number::before, .section > .section-number::after { content: "" !important; display: block; width: 56px; height: 1px; background: currentColor; opacity: 0.45; }
+  .section > .section-number { --orn: "✦"; }
+  .section > .section-number span.orn { opacity: 0.7; }
+  .section { border-bottom: none !important; padding-top: 72px !important; }

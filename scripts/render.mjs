@@ -697,7 +697,7 @@ for (const sec of sections) {
   if (isSwiss && sec.num && sec.title) {
     bodyHtml += `<div class="section-header"><div class="section-number">${sec.num}</div><h2>${inlineMd(sec.title)}</h2></div>`;
   } else {
-    if (sec.num) bodyHtml += `<div class="section-number">${sec.num}</div>`;
+    if (sec.num) bodyHtml += isSwiss ? `<div class="section-number">${sec.num}</div>` : `<div class="section-number"><span class="orn">✦</span>${sec.num}<span class="orn">✦</span></div>`;
     if (sec.title) bodyHtml += `<h2>${inlineMd(sec.title)}</h2>`;
   }
   bodyHtml += sec.blocks.join('\n');

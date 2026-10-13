@@ -1072,3 +1072,30 @@
     .section.section > .figure-card > figcaption { border-top: 0; padding-top: 6px !important; }
     .pullquote-swiss .pq-bar { display: none; }
   }
+
+  /* v0.13 · 正文栏严格居中（中线偏移 0），左轨从正文栏左侧“挂出”；宽组件绕同一中线对称 */
+  :root { --media: 800px; }
+  .section.section { grid-template-columns: minmax(0,1fr) minmax(0, var(--col)) minmax(0,1fr) !important; column-gap: 0 !important; }
+  .section.section > * { grid-column: 2 / 3 !important; }
+  .section.section > .figure-card, .section.section > .img-row, .section.section > .img-strip-wrap,
+  .section.section > .media-embed, .section.section > .table-wrap, .section.section > .hchart,
+  .section.section > .gallery-grid, .section.section > .data-figure {
+    grid-column: 1 / 4 !important; justify-self: center !important; width: 100%; max-width: var(--media) !important; }
+  .section.section > .pullquote, .section.section > .highlight-card { grid-column: 1 / 4 !important; justify-self: stretch !important; }
+  /* 章节号挂在正文栏左侧 */
+  .section.section > .section-header { grid-column: 2 / 3 !important; display: block !important; position: relative; }
+  .section-header .section-number { position: absolute !important; right: calc(100% + var(--rail-gap)); width: var(--rail); top: auto; bottom: 0.08em; text-align: left !important; }
+  .section-header h2 { display: block; }
+  /* 图注挂在图片左侧页边 */
+  .section.section > .figure-card { display: block !important; position: relative; }
+  .section.section > .figure-card > figcaption { position: absolute; right: calc(100% + 24px); bottom: 0; width: 160px; }
+  @media (max-width: 1100px) {
+    .section.section { display: block !important; }
+    .section.section > * { max-width: none !important; }
+    .section-header .section-number { position: static !important; display: block; width: auto; margin-bottom: 8px; font-size: 28px !important; }
+    .section.section > .figure-card > figcaption { position: static; width: auto; margin-top: 8px !important; }
+  }
+  @media (max-width: 1100px) {
+    .section.section > p, .section.section > ul, .section.section > ol, .section.section > blockquote,
+    .section.section > h3, .section.section > .section-header { max-width: var(--col) !important; margin-left: auto !important; margin-right: auto !important; }
+  }
