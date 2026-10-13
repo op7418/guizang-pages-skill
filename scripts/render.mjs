@@ -242,6 +242,20 @@ for (let i = 0; i < originalLines.length; i++) {
     continue;
   }
 
+  // ── Document title (# ) — already shown in the hero from meta.title ──
+  if (/^#\s+/.test(trimmed) && !trimmed.startsWith('##')) {
+    const h1 = trimmed.replace(/^#\s+/, '').trim();
+    const norm = t => t.replace(/[\s*_`]/g, '');
+    if (norm(h1) !== norm(anno.meta.title || '')) addBlock(`<h3>${inlineMd(h1)}</h3>`);
+    continue;
+  }
+
+  // ── Thematic break (---, ***, ___) ── used to leak out as a literal "---" paragraph
+  if (/^(?:-{3,}|\*{3,}|_{3,})$/.test(trimmed.replace(/\s+/g, ''))) {
+    addBlock('<hr class="divider">');
+    continue;
+  }
+
   // ── Section headings ──
   if (trimmed.startsWith('## ')) {
     flushSection();

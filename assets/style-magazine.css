@@ -1212,6 +1212,23 @@
     border-bottom: none;
   }
 
+  /* Avoid double borders: consecutive pullquotes share one rule */
+  .pullquote + .pullquote {
+    border-top: none;
+    margin-top: calc(-1 * var(--space-lg));
+  }
+
+  /* Thematic breaks (---) never stack on another rule:
+     drop them at section start/end (the section border already separates),
+     next to a pullquote (which has its own rules), or when repeated. */
+  .section > .divider:first-child,
+  .section > .section-number + h2 + .divider,
+  .section > .divider:last-child,
+  .divider + .divider,
+  .pullquote + .divider { display: none; }
+  .divider + .pullquote { border-top: none; }
+  .divider { grid-column: 2 / 12; margin: var(--space-lg) 0; }
+
   .pullquote p {
     font-family: var(--font-serif);
     font-size: 1.5rem;
