@@ -112,53 +112,6 @@
     }
   });
 
-  // WeChat: generate inline-style HTML and copy to clipboard
-  document.getElementById('hf-copy-wechat').addEventListener('click', async () => {
-    closeAllDropdowns();
-    toast('正在转换公众号格式…');
-
-    const container = document.querySelector('.container');
-
-    // Use wechat exporter if loaded
-    if (typeof window._exportToWechat === 'function') {
-      const wechatHtml = window._exportToWechat(container);
-      try {
-        const blob = new Blob([wechatHtml], { type: 'text/html' });
-        const textBlob = new Blob([container.innerText], { type: 'text/plain' });
-        await navigator.clipboard.write([
-          new ClipboardItem({ 'text/html': blob, 'text/plain': textBlob })
-        ]);
-        toast('公众号排版已复制，可直接粘贴');
-      } catch {
-        // Fallback: inject into temp element and copy
-        const tmp = document.createElement('div');
-        tmp.innerHTML = wechatHtml;
-        tmp.style.position = 'fixed';
-        tmp.style.left = '-9999px';
-        document.body.appendChild(tmp);
-        const range = document.createRange();
-        range.selectNodeContents(tmp);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-        document.execCommand('copy');
-        sel.removeAllRanges();
-        document.body.removeChild(tmp);
-        toast('公众号排版已复制（降级模式）');
-      }
-    } else {
-      // No exporter loaded, raw copy
-      const sel = window.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(container);
-      sel.removeAllRanges();
-      sel.addRange(range);
-      document.execCommand('copy');
-      sel.removeAllRanges();
-      toast('已复制（无公众号格式优化）');
-    }
-  });
-
   document.getElementById('hf-settings-toggle').addEventListener('click', (e) => {
     e.stopPropagation();
     const dd = document.getElementById('hf-settings-dropdown');

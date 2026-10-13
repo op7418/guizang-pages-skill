@@ -1,6 +1,6 @@
 ---
 name: guizang-page-skill
-description: 将文档、文章或笔记渲染为精排单页 HTML，支持导出 PDF、长图和公众号格式。当用户需要把文档排版成网页，或提到"排版"、"生成网页"、"做成页面"、"Page Skill"时使用。
+description: 将文档、文章或笔记渲染为精排单页 HTML，支持导出 PDF 和长图（不提供公众号导出，公众号排版请用 wechat-formatter）。当用户需要把文档排版成网页，或提到"排版"、"生成网页"、"做成页面"、"Page Skill"时使用。
 ---
 
 # 归藏 Page
@@ -35,7 +35,7 @@ Markdown 原文 ──→ annotations.json ──→ render.mjs ──→ output
 ## 何时使用
 
 **合适**：文档排版、文章展示、知识笔记可视化、PRD 格式化、读书笔记整理、双语文档单语渲染
-**不合适**：PPT 演示（用 guizang-ppt-skill）、社交媒体卡片（用 guizang-social-card-skill）、纯微信公众号排版（用 wechat-formatter）
+**不合适**：PPT 演示（用 guizang-ppt-skill）、社交媒体卡片（用 guizang-social-card-skill）、微信公众号排版（本 Skill 已移除公众号导出，用 wechat-formatter）
 
 ## 工作流
 

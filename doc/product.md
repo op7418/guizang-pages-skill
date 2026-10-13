@@ -2,7 +2,7 @@
 
 ## 定位
 
-将文档、文章或笔记渲染为精排单页 HTML，支持导出 PDF、长图和公众号格式。
+将文档、文章或笔记渲染为精排单页 HTML，支持导出 PDF 和长图。
 
 **一句话理解**：PPT Skill 做演示，Page Skill 做阅读。
 
@@ -86,24 +86,17 @@ Markdown 原文 ──→ annotations.json ──→ render.mjs ──→ output
 - 字体选择：每种风格 3 组字体方案
 
 ### 导出功能（右上角）
-- **PDF**：`window.print()` + print CSS 强制保留背景色
+- **PDF**：`window.print()` + print CSS（小块不拆、长块可跨页、标题不落页尾），打印前提示勾选「背景图形」
 - **长图**：html2canvas CDN，截图前自动隐藏 UI 元素
-- **公众号排版**：HTML→公众号兼容格式翻译器，复制到剪贴板
+- ~~公众号排版~~：v0.8 移除。公众号编辑器兼容性太差，无法还原网页排版；需要发公众号请用 wechat-formatter
 
 ### 文本编辑
 - 正文和标题 contenteditable，点击即进入编辑状态
 - 装饰性内容（chrome、标签、图标）不可编辑
 
-## 公众号兼容规则
+## 公众号导出（已移除）
 
-公众号编辑器有严格限制，导出时做以下翻译：
-- 所有样式写成 inline `style="...visibility:visible;"`
-- 文字用 `<span leaf="">` 包裹
-- 用 `<section>` 代替 `<div>`
-- 不使用 class、id、position、自定义字体、CSS 变量、em/rem
-- 字体回退为系统字体栈：`-apple-system, PingFang SC, Microsoft YaHei, sans-serif`
-- 间距用 `padding-top` + `<br>` 撑高度（空 section 会被折叠）
-- 布局用 inline-block 而非 flex/grid
+v0.8 起删除公众号导出（`wechat-export.js` 与导出菜单入口）。原因：公众号编辑器会剥离 class/position/变量/自定义字体并折叠空元素，翻译后的版式无法还原网页效果。历史兼容规则见 git 历史（基线提交 7dccdc7）。
 
 ## 文件结构
 
@@ -119,7 +112,7 @@ html-skill/
 │   ├── style-swiss.css             # 瑞士风 CSS
 │   ├── ui.css                      # 设置/导出面板样式
 │   ├── ui.js                       # 设置/导出/编辑逻辑
-│   └── wechat-export.js            # 公众号格式翻译器
+│   └── themes.json                 # 配色与字体选项（render.mjs 静态写入面板）
 ├── references/
 │   ├── components.md               # 17 个组件的完整参考
 │   └── design-rules.md             # 设计规则
@@ -131,10 +124,10 @@ html-skill/
 
 - 文档排版：技术文章、产品文档、读书笔记
 - 知识可视化：双语文档单语渲染、PRD 格式化
-- 内容发布：公众号文章排版、PDF 分享
+- 内容发布：网页阅读、PDF / 长图分享
 
 ## 不适用场景
 
 - PPT 演示 → 用 guizang-ppt-skill
 - 社交媒体卡片 → 用 guizang-social-card-skill
-- 纯微信公众号排版 → 用 wechat-formatter
+- 微信公众号排版 → 用 wechat-formatter（本 Skill 不再提供公众号导出）

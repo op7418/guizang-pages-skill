@@ -596,8 +596,6 @@ const uiCss = readAsset('ui.css');
 const uiJs = readAsset('ui.js');
 const themes = JSON.parse(readAsset('themes.json'));
 const theme = themes[styleName] || themes.swiss;
-let wechatJs = '';
-try { wechatJs = readFileSync(resolve(assetsDir, 'wechat-export.js'), 'utf-8'); } catch {}
 
 // Static UI markup (export button + settings FAB). Rendered into the HTML itself so the
 // controls exist even before/without JS; ui.js only wires up behaviour.
@@ -614,8 +612,6 @@ const uiMarkup = `
   <div class="hf-dropdown" id="hf-share-dropdown">
     <button class="hf-dropdown-item" id="hf-export-pdf" type="button">${ICON.pdf}导出 PDF</button>
     <button class="hf-dropdown-item" id="hf-export-image" type="button">${ICON.image}导出长图</button>
-    <div class="hf-dropdown-divider"></div>
-    <button class="hf-dropdown-item" id="hf-copy-wechat" type="button">复制公众号排版</button>
   </div>
 </div>
 <div class="hf-fab">
@@ -769,7 +765,6 @@ ${bodyHtml}
 ${chartScript}
 ${tocScript}
 ${uiMarkup}
-${wechatJs ? `<script>${wechatJs}</script>` : ''}
 <script>${uiJs}</script>
 </body>
 </html>`;

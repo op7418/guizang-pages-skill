@@ -34,16 +34,22 @@
 
 ### v0.5 — 交互功能
 - 右下角设置面板：配色切换（3 组）+ 字体选择（3 组）
-- 右上角导出：PDF / 长图（html2canvas）/ 公众号排版
+- 右上角导出：PDF / 长图（html2canvas）/ 公众号排版（公众号排版已于 v0.8 移除）
 - 文本 contenteditable 点击编辑
 - TOC 左侧目录 + scroll spy
 - 所有 emoji 图标替换为 Lucide SVG 内联图标
 
-### v0.6 — 公众号导出器
+### v0.6 — 公众号导出器（v0.8 已移除，仅留作历史记录）
 - 第一版直接硬编码了公众号 Skill 的视觉样式，被歸藏指出应只借技术写法
 - 重写为 `getComputedStyle()` 实时读取当前主题色值，保持视觉一致
 - 调研了公众号 HTML/CSS 兼容性，确定了不可用属性列表
 - 间距问题：空 section 在公众号被折叠 → 改用 `padding-top` + `<br>` 撑高度
+
+### v0.8 — 修复与收敛（2026-10，Grok Bot）
+- TOC 打开时推开页面不再遮挡正文；导出/设置按钮静态渲染；杂志风配色、字体切换生效
+- PDF 分页规则重写，导出前提示勾选背景图形
+- 移除公众号导出（歸藏决定）
+- 中文排版规则固化（见 references/design-rules.md、references/cjk-typography-research.md）
 
 ### v0.7 — 命名定稿
 - HyperFrames → guizang-page-skill
@@ -71,7 +77,7 @@
 - 过多分割线 → 一屏七八根线
 - 大编号与标题分两行 → 间距过大，编号悬空
 
-### 3. 为什么公众号导出用 getComputedStyle？
+### 3. 为什么公众号导出用 getComputedStyle？（历史，v0.8 已移除公众号导出）
 
 **背景**：第一版硬编码了公众号 Skill 的中文衬线风格，导致瑞士风导出变成了另一套完全不同的视觉。
 
@@ -104,8 +110,8 @@ html-skill/
 │   ├── style-magazine.css   # 杂志风 CSS（含 print 样式）
 │   ├── style-swiss.css      # 瑞士风 CSS（含 print 样式）
 │   ├── ui.css               # UI 面板样式
-│   ├── ui.js                # 设置/导出/编辑逻辑
-│   └── wechat-export.js     # 公众号格式翻译器
+│   ├── ui.js                # 设置/导出/编辑逻辑（按钮由 render.mjs 静态写入）
+│   └── themes.json          # 配色/字体选项
 ├── references/
 │   ├── components.md        # 17 个组件参考
 │   └── design-rules.md      # 设计规则
