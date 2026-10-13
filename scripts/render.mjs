@@ -657,6 +657,7 @@ const tocHtml = tocItems.map(t =>
 ).join('\n');
 
 const tocSidebar = `
+<div class="toc-scrim" id="toc-scrim"></div>
 <nav class="toc" id="toc">
   <button class="toc-toggle" id="toc-toggle" aria-label="Toggle table of contents">
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 4h14M2 9h10M2 14h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -673,16 +674,22 @@ const tocScript = `
   const toggle = document.getElementById('toc-toggle');
   const panel = document.getElementById('toc-panel');
   const toc = document.getElementById('toc');
+  const scrim = document.getElementById('toc-scrim');
+  const narrow = window.matchMedia('(max-width: 1024px)');
   let open = false;
-  toggle.addEventListener('click', () => {
-    open = !open;
-    toc.classList.toggle('toc-open', open);
-  });
+  function setOpen(v) {
+    open = v;
+    toc.classList.toggle('toc-open', v);
+    document.documentElement.classList.toggle('toc-is-open', v);
+    toggle.setAttribute('aria-expanded', String(v));
+  }
+  toggle.addEventListener('click', (e) => { e.stopPropagation(); setOpen(!open); });
+  if (scrim) scrim.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && open) setOpen(false); });
   panel.addEventListener('click', (e) => {
-    if (e.target.closest('.toc-item')) {
-      open = false;
-      toc.classList.remove('toc-open');
-    }
+    // On narrow screens the drawer covers the text, so close it after jumping;
+    // on wide screens it sits beside the text and can stay open.
+    if (e.target.closest('.toc-item') && narrow.matches) setOpen(false);
   });
   // Scroll spy
   const sections = document.querySelectorAll('.section[id]');
