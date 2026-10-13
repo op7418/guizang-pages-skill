@@ -132,6 +132,15 @@
     if (sw.dataset.accentBright) root.style.setProperty('--accent-bright', sw.dataset.accentBright);
     else root.style.removeProperty('--accent-bright');
     root.style.setProperty('--accent-on', sw.dataset.accentOn || '#ffffff');
+    // Background/surface palette follows the colour theme (tinted bg; dark theme = dark bg).
+    // Clear vars set by the previous swatch first so stylesheet defaults come back.
+    (root.dataset.hfVars || '').split(',').filter(Boolean).forEach(k => root.style.removeProperty(k));
+    let vars = {};
+    try { vars = JSON.parse(sw.dataset.vars || '{}'); } catch (_) {}
+    Object.entries(vars).forEach(([k, v]) => root.style.setProperty(k, v));
+    root.dataset.hfVars = Object.keys(vars).join(',');
+    root.dataset.scheme = sw.dataset.scheme || 'light';
+    root.style.colorScheme = root.dataset.scheme;
   }
   // ── Font switching ──
   // Old bug: Google Fonts URL was built from the display name with weights 200–800;

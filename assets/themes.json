@@ -1,30 +1,154 @@
 {
   "swiss": {
     "colors": [
-      { "name": "IKB Blue", "accent": "#002FA7", "accentBright": "#5B7BFF", "accentOn": "#ffffff" },
-      { "name": "Cadmium Yellow", "accent": "#FFD500", "accentBright": "#FFE34D", "accentOn": "#0a0a0a" },
-      { "name": "Safety Orange", "accent": "#FF6B35", "accentBright": "#FF9A6C", "accentOn": "#ffffff" },
-      { "name": "Highlighter Green", "accent": "#C5E803", "accentBright": "#D4F040", "accentOn": "#0a0a0a" }
+      {
+        "name": "IKB Blue",
+        "accent": "#002FA7",
+        "accentBright": "#5B7BFF",
+        "accentOn": "#ffffff",
+        "vars": {
+          "--bg": "#f4f6fb",
+          "--bg-card": "#e6ebf6",
+          "--accent-ink": "#002FA7",
+          "--hl-bg": "#002FA7",
+          "--hl-fg": "#ffffff",
+          "--hl-label": "rgba(255,255,255,0.6)"
+        }
+      },
+      {
+        "name": "Cadmium Yellow",
+        "accent": "#FFD500",
+        "accentBright": "#FFE34D",
+        "accentOn": "#0a0a0a",
+        "vars": {
+          "--bg": "#faf8f1",
+          "--bg-card": "#f1ede0",
+          "--accent-ink": "#7a5f00",
+          "--hl-bg": "#FFD500",
+          "--hl-fg": "#0a0a0a",
+          "--hl-label": "rgba(10,10,10,0.6)"
+        }
+      },
+      {
+        "name": "Safety Orange",
+        "accent": "#FF6B35",
+        "accentBright": "#FF9A6C",
+        "accentOn": "#ffffff",
+        "vars": {
+          "--bg": "#fcf6f2",
+          "--bg-card": "#f6e9e1",
+          "--accent-ink": "#c2410c",
+          "--hl-bg": "#FF6B35",
+          "--hl-fg": "#0a0a0a",
+          "--hl-label": "rgba(10,10,10,0.6)"
+        }
+      },
+      {
+        "name": "Highlighter Green",
+        "accent": "#C5E803",
+        "accentBright": "#D4F040",
+        "accentOn": "#0a0a0a",
+        "vars": {
+          "--bg": "#f6f8ee",
+          "--bg-card": "#eaefd8",
+          "--accent-ink": "#4a6400",
+          "--hl-bg": "#C5E803",
+          "--hl-fg": "#0a0a0a",
+          "--hl-label": "rgba(10,10,10,0.6)"
+        }
+      }
     ],
     "fontVar": "--font-sans",
     "fonts": [
-      { "name": "Inter", "family": "'Inter','Helvetica Neue','PingFang SC','Noto Sans SC',sans-serif", "google": "Inter:wght@200;300;400;500;600;700" },
-      { "name": "DM Sans", "family": "'DM Sans','PingFang SC','Noto Sans SC',sans-serif", "google": "DM+Sans:wght@300;400;500;600;700" },
-      { "name": "Space Grotesk", "family": "'Space Grotesk','PingFang SC','Noto Sans SC',sans-serif", "google": "Space+Grotesk:wght@300;400;500;600;700" }
+      {
+        "name": "Inter",
+        "family": "'Inter','Helvetica Neue','PingFang SC','Noto Sans SC',sans-serif",
+        "google": "Inter:wght@200;300;400;500;600;700"
+      },
+      {
+        "name": "DM Sans",
+        "family": "'DM Sans','PingFang SC','Noto Sans SC',sans-serif",
+        "google": "DM+Sans:wght@300;400;500;600;700"
+      },
+      {
+        "name": "Space Grotesk",
+        "family": "'Space Grotesk','PingFang SC','Noto Sans SC',sans-serif",
+        "google": "Space+Grotesk:wght@300;400;500;600;700"
+      }
     ]
   },
   "magazine": {
     "colors": [
-      { "name": "Terracotta", "accent": "#c45a3c", "accentOn": "#ffffff" },
-      { "name": "Forest", "accent": "#3d6b4f", "accentOn": "#ffffff" },
-      { "name": "Indigo", "accent": "#3f4d8c", "accentOn": "#ffffff" },
-      { "name": "Charcoal", "accent": "#4a4a4a", "accentOn": "#ffffff" }
+      {
+        "name": "Terracotta",
+        "accent": "#c45a3c",
+        "accentOn": "#ffffff",
+        "vars": {}
+      },
+      {
+        "name": "Forest",
+        "accent": "#3d6b4f",
+        "accentOn": "#ffffff",
+        "vars": {
+          "--bg": "#eff3ee",
+          "--bg-card": "#e2e9e0",
+          "--bg-quote": "#d9e2d6",
+          "--border": "#c3cfc0",
+          "--border-light": "#d6dfd3",
+          "--accent-ink": "#3d6b4f"
+        }
+      },
+      {
+        "name": "Indigo",
+        "accent": "#3f4d8c",
+        "accentOn": "#ffffff",
+        "vars": {
+          "--bg": "#f0f1f7",
+          "--bg-card": "#e3e5f0",
+          "--bg-quote": "#d9dcea",
+          "--border": "#c4c8db",
+          "--border-light": "#d8dbe8",
+          "--accent-ink": "#3f4d8c"
+        }
+      },
+      {
+        "name": "Charcoal (Dark)",
+        "accent": "#d9a05b",
+        "accentOn": "#1b1b1d",
+        "scheme": "dark",
+        "vars": {
+          "--bg": "#1b1b1d",
+          "--bg-card": "#26262a",
+          "--bg-quote": "#2d2d32",
+          "--fg": "#e9e6df",
+          "--fg-secondary": "#bdb9b0",
+          "--fg-tertiary": "#8f8b83",
+          "--bg-highlight": "#e9e6df",
+          "--fg-highlight": "#1b1b1d",
+          "--border": "#3d3d42",
+          "--border-light": "#313136",
+          "--accent-ink": "#e0ac6c"
+        },
+        "swatch": "#2a2a2d"
+      }
     ],
     "fontVar": "--font-serif",
     "fonts": [
-      { "name": "Noto Serif SC", "family": "'Noto Serif SC','Source Han Serif SC','Songti SC',Georgia,serif", "google": "Noto+Serif+SC:wght@400;600;700" },
-      { "name": "Playfair Display", "family": "'Playfair Display','Noto Serif SC','Songti SC',Georgia,serif", "google": "Playfair+Display:wght@400;600;700" },
-      { "name": "Source Serif 4", "family": "'Source Serif 4','Noto Serif SC','Songti SC',Georgia,serif", "google": "Source+Serif+4:wght@400;600;700" }
+      {
+        "name": "Noto Serif SC",
+        "family": "'Noto Serif SC','Source Han Serif SC','Songti SC',Georgia,serif",
+        "google": "Noto+Serif+SC:wght@400;600;700"
+      },
+      {
+        "name": "Playfair Display",
+        "family": "'Playfair Display','Noto Serif SC','Songti SC',Georgia,serif",
+        "google": "Playfair+Display:wght@400;600;700"
+      },
+      {
+        "name": "Source Serif 4",
+        "family": "'Source Serif 4','Noto Serif SC','Songti SC',Georgia,serif",
+        "google": "Source+Serif+4:wght@400;600;700"
+      }
     ]
   }
 }
