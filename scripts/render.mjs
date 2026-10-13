@@ -81,6 +81,20 @@ for (const u of anno.upgrades) {
 
 // ── Inline markdown helpers ──
 function inlineMd(text) {
+  // Arrows & dashes typed in plain markdown — skipped inside `code` spans.
+  const glyphs = (t) => {
+  // Arrows & dashes typed in plain markdown (-> <- => -- …) → proper glyphs.
+  // Done before HTML is produced, so only author text is touched (no tags yet).
+  t = t.replace(/<->/g, '↔').replace(/(^|[^-<!])->/g, '$1→').replace(/<-(?!-)/g, '←').replace(/(^|[^=<>])=>/g, '$1⇒');
+  // Paired ASCII double hyphen used as Chinese dash: "-- 插入语 --" / "--插入语--" → ——插入语——
+  t = t.replace(/(^|[^-])\s?--(?!-)\s?([^-\n]+?)\s?--(?!-)\s?/g, '$1——$2——');
+  t = t.replace(/(^|[^-])\s--\s/g, '$1——');
+  // Dash-enclosed emphasis / interjection ——…—— : keep each "——" unbreakable and mark the span
+  t = t.replace(/——([^—\n]{1,120}?)——/g, '<span class="dash-em"><span class="dash">——</span>$1<span class="dash">——</span></span>');
+  t = t.replace(/——(?![^<]*<\/span>)/g, '<span class="dash">——</span>');
+    return t;
+  };
+  text = text.split(/(`[^`]+`)/).map((seg, k) => k % 2 ? seg : glyphs(seg)).join('');
   // Bold
   text = text.replace(/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g, '<strong><a href="$2">$1</a></strong>');
   text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -99,6 +113,35 @@ function parseDefCard(line) {
   const m = line.match(/^>\s*\*\*([^*]+)\*\*[：:]\s*(.+)$/);
   if (m) return { term: m[1], body: m[2] };
   return null;
+}
+
+// ── Blockquote renderer: nesting (> >, >>), multi-paragraph (blank ">"), attribution ──
+// Attribution = last paragraph starting with —— / — / -- / ―, rendered as <footer><cite>.
+function renderQuote(rawLines, depth = 0) {
+  const lines = rawLines.map(l => l.replace(/^>\s?/, ''));
+  const parts = []; let para = [];
+  const flushPara = () => { if (para.length) { parts.push({ t: 'p', text: para.join(' ') }); para = []; } };
+  for (let k = 0; k < lines.length; k++) {
+    const l = lines[k].trim();
+    if (/^>/.test(l)) {
+      flushPara();
+      const nested = [];
+      while (k < lines.length && /^>/.test(lines[k].trim())) { nested.push(lines[k].trim()); k++; }
+      k--;
+      parts.push({ t: 'q', lines: nested });
+    } else if (l === '') flushPara();
+    else para.push(l);
+  }
+  flushPara();
+  let cite = '';
+  const last = parts[parts.length - 1];
+  if (last && last.t === 'p' && /^(——|—|―|--)\s*\S/.test(last.text) && parts.length > 1) {
+    cite = last.text.replace(/^(——|—|―|--)\s*/, '');
+    parts.pop();
+  }
+  const inner = parts.map(pt => pt.t === 'q' ? renderQuote(pt.lines, depth + 1) : `<p>${inlineMd(pt.text)}</p>`).join('');
+  const cls = depth ? ' class="bq-nested"' : '';
+  return `<blockquote${cls}>${inner}${cite ? `<footer class="bq-cite"><span class="dash">——</span><cite>${inlineMd(cite)}</cite></footer>` : ''}</blockquote>`;
 }
 
 // ── Main render loop ──
@@ -290,15 +333,19 @@ for (let i = 0; i < originalLines.length; i++) {
 
   // Pullquote — Swiss: vertical accent bar left, large light text right
   if (upgrade && upgrade.type === 'pullquote') {
-    const text = trimmed.replace(/^\*\*/, '').replace(/\*\*$/, '');
+    // Pullquote may sit on a "> …" line: strip the markdown marker (it used to leak as a literal ">")
+    let text = trimmed.replace(/^(>\s?)+/, '').trim().replace(/^\*\*/, '').replace(/\*\*$/, '');
+    let pqCite = '';
+    const cm = text.match(/^(.*[”"」』）)])\s*[（(]([^（）()]{1,80})[）)]\s*[。.]?$/);
+    if (cm) { text = cm[1]; pqCite = cm[2]; }
     let rendered = inlineMd(text);
     if (upgrade.accent) {
       rendered = rendered.replace(upgrade.accent, `<span class="accent-mark">${upgrade.accent}</span>`);
     }
     if (styleName === 'swiss') {
-      addBlock(`<div class="pullquote pullquote-swiss"><div class="pq-bar"></div><div class="pq-content"><p>${rendered}</p></div></div>`);
+      addBlock(`<div class="pullquote pullquote-swiss"><div class="pq-bar"></div><div class="pq-content"><p>${rendered}</p>${pqCite ? `<div class="pq-cite">${inlineMd(pqCite)}</div>` : ''}</div></div>`);
     } else {
-      addBlock(`<div class="pullquote"><p>${rendered}</p></div>`);
+      addBlock(`<div class="pullquote"><p>${rendered}</p>${pqCite ? `<div class="pq-cite">${inlineMd(pqCite)}</div>` : ''}</div>`);
     }
     continue;
   }
@@ -422,7 +469,7 @@ for (let i = 0; i < originalLines.length; i++) {
   }
 
   // ── Standard blockquote (non-def-card) ──
-  if (trimmed.startsWith('> ') && !defCardLines.has(lineNum)) {
+  if (/^>/.test(trimmed) && !defCardLines.has(lineNum)) {
     const parsed = parseDefCard(trimmed);
     if (parsed) {
       if (styleName === 'swiss') {
@@ -432,22 +479,13 @@ for (let i = 0; i < originalLines.length; i++) {
       }
       continue;
     }
-    // Regular blockquote - collect consecutive > lines
-    let bqLines = [trimmed.replace(/^>\s*/, '')];
+    // Regular blockquote — collect contiguous ">" lines (a blank line ends the quote,
+    // as in CommonMark; old code swallowed blanks and merged separate quotes).
+    let bqRaw = [trimmed];
     let j = i + 1;
-    while (j < originalLines.length) {
-      const nextTrimmed = originalLines[j].trim();
-      if (nextTrimmed.startsWith('> ')) {
-        bqLines.push(nextTrimmed.replace(/^>\s*/, ''));
-        j++;
-      } else if (nextTrimmed === '') {
-        j++;
-      } else {
-        break;
-      }
-    }
+    while (j < originalLines.length && /^>/.test(originalLines[j].trim())) { bqRaw.push(originalLines[j].trim()); j++; }
     skipUntil = j + 1;
-    addBlock(`<blockquote><p>${inlineMd(bqLines.join(' '))}</p></blockquote>`);
+    addBlock(renderQuote(bqRaw));
     continue;
   }
 
@@ -633,7 +671,7 @@ const uiMarkup = `
   <div class="hf-dropdown" id="hf-settings-dropdown">
     <div class="hf-dropdown-label">配色</div>
     <div class="hf-swatches">${theme.colors.map((c, i) =>
-      `<button type="button" class="hf-swatch${i === 0 ? ' active' : ''}" data-accent="${c.accent}" data-accent-bright="${c.accentBright || ''}" data-accent-on="${c.accentOn || '#ffffff'}" style="background:${c.accent}" title="${attr(c.name)}" aria-label="${attr(c.name)}"></button>`).join('')}</div>
+      `<button type="button" class="hf-swatch${i === 0 ? ' active' : ''}" data-accent="${c.accent}" data-accent-bright="${c.accentBright || ''}" data-accent-on="${c.accentOn || '#ffffff'}" data-vars="${attr(JSON.stringify(c.vars || {}))}" data-scheme="${c.scheme || 'light'}" style="background:${c.swatch || c.accent}" title="${attr(c.name)}" aria-label="${attr(c.name)}"></button>`).join('')}</div>
     <div class="hf-dropdown-divider"></div>
     <div class="hf-dropdown-label">字体</div>
     <div class="hf-font-options">${theme.fonts.map((f, i) =>
