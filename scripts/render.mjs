@@ -200,18 +200,40 @@ for (let i = 0; i < originalLines.length; i++) {
   }
 
   // Skip HTML-only lines (sub/sup references, video tags, svg blocks)
-  if (/^<(sub|sup|video|svg|\/svg)/.test(trimmed)) continue;
+  if (/^<(sub|sup|svg|\/svg)/.test(trimmed)) continue;
   // Skip footnote definition lines
   if (/^\[\^\d+\]:/.test(trimmed)) continue;
 
-  // Image lines — render as real <img> with figure wrapper
-  if (/^!\[.*\]\(.*\)$/.test(trimmed)) {
-    const imgMatch = trimmed.match(/^!\[([^\]]*)\]\(([^)]+)\)/);
-    if (imgMatch) {
-      const alt = imgMatch[1] || '';
-      const src = imgMatch[2];
-      addBlock(`<figure class="figure-card"><img src="${escHtml(src)}" alt="${escHtml(alt)}" loading="lazy" style="width:100%;display:block;border-radius:${styleName === 'magazine' ? '3px' : '0'}" />${alt && !alt.startsWith('img_') ? `<figcaption style="font-family:var(--font-mono);font-size:0.75rem;color:var(--fg-muted);margin-top:8px">${escHtml(alt)}</figcaption>` : ''}</figure>`);
+  // Image lines — one image = figure; 2–3 adjacent images (same line or consecutive lines)
+  // = side-by-side group; 4+ = horizontally scrollable strip. All use the breakout width.
+  const IMG_ONLY = /^(?:!\[[^\]]*\]\([^)]+\)\s*)+$/;
+  if (IMG_ONLY.test(trimmed)) {
+    const imgs = [];
+    let j = i;
+    while (j < originalLines.length && IMG_ONLY.test(originalLines[j].trim())) {
+      for (const m of originalLines[j].trim().matchAll(/!\[([^\]]*)\]\(([^)]+)\)/g)) imgs.push({ alt: m[1] || '', src: m[2] });
+      j++;
     }
+    skipUntil = j + 1;
+    const radius = styleName === 'magazine' ? '3px' : '0';
+    const cap = alt => alt && !alt.startsWith('img_') ? `<figcaption>${inlineMd(escHtml(alt))}</figcaption>` : '';
+    const one = (im, cls = '') => `<figure class="figure-card${cls}"><img src="${escHtml(im.src)}" alt="${escHtml(im.alt)}" loading="lazy" style="border-radius:${radius}" />${cap(im.alt)}</figure>`;
+    if (imgs.length === 1) addBlock(one(imgs[0]));
+    else if (imgs.length <= 3) addBlock(`<div class="img-row img-row-${imgs.length}">${imgs.map(im => one(im)).join('')}</div>`);
+    else addBlock(`<div class="img-strip-wrap"><div class="img-strip">${imgs.map(im => one(im)).join('')}</div><div class="img-strip-hint">← 横向滑动查看 ${imgs.length} 张 →</div></div>`);
+    continue;
+  }
+
+  // Embedded video / iframe (single or multi-line) → breakout media figure
+  if (/^<(video|iframe)\b/i.test(trimmed)) {
+    const tag = trimmed.match(/^<(video|iframe)/i)[1].toLowerCase();
+    const buf = [originalLines[i]];
+    let j = i + 1;
+    if (!new RegExp(`</${tag}>|/>\\s*$`, 'i').test(trimmed)) {
+      while (j < originalLines.length) { buf.push(originalLines[j]); j++; if (new RegExp(`</${tag}>`, 'i').test(originalLines[j - 1])) break; }
+    }
+    skipUntil = j + 1;
+    addBlock(`<figure class="figure-card media-embed media-${tag}">${buf.join('\n')}</figure>`);
     continue;
   }
 

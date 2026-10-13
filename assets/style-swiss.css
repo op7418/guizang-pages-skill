@@ -897,3 +897,35 @@
   /* global `footer` (page footer) styles must not leak into quote attributions */
   blockquote footer.bq-cite { display: block !important; padding: 0 !important; margin: 0.7em 0 0 !important; border: 0 !important; background: none !important; min-height: 0 !important; text-align: right; }
   blockquote footer.bq-cite > * { grid-column: auto; }
+
+  /* v0.10 · 宽窄两档：正文窄栏 --col，图片/视频/图组/强调组件破出到 --wide，同一中线 */
+  .section > .figure-card,
+  .section > .img-row,
+  .section > .img-strip-wrap,
+  .section > .media-embed,
+  .section > .gallery, .section > .gallery-hint, .section > .gallery-grid,
+  .section > .pullquote,
+  .section > .highlight-card,
+  .section > .table-wrap,
+  .section > .data-figure, .section > .embed-card, .section > .chart-row { max-width: var(--wide) !important; }
+  .figure-card img { width: 100%; height: auto; display: block; }
+  .img-row { display: grid; gap: 12px; margin-top: 2.2em; margin-bottom: 2.2em; }
+  .img-row-2 { grid-template-columns: 1fr 1fr; }
+  .img-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .img-row .figure-card { margin: 0; }
+  .img-row .figure-card img { aspect-ratio: 4 / 3; object-fit: cover; }
+  .img-strip-wrap { margin-top: 2.2em; margin-bottom: 2.2em; }
+  .img-strip { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; }
+  .img-strip .figure-card { flex: 0 0 62%; margin: 0; scroll-snap-align: start; }
+  .img-strip-hint { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); text-align: right; margin-top: 6px; }
+  .media-embed video, .media-embed iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; display: block; border: 0; background: #000; }
+  .toc-panel { box-shadow: none !important; background: var(--bg-card) !important; }
+  @media (max-width: 760px) {
+    .img-row-3 { grid-template-columns: 1fr 1fr; }
+    .img-strip .figure-card { flex-basis: 85%; }
+  }
+  @media print { .img-strip { flex-wrap: wrap; overflow: visible; } .img-strip .figure-card { flex-basis: 48%; } .img-strip-hint { display: none; } }
+  :root { --wide: 1040px; --accent-deep: #001d6b; }   /* = hero 宽度（container 内容区） */
+  .toc-panel { border-right: 1px solid rgba(0,0,0,0.07); }
+  .section-header .section-number { color: var(--accent-deep) !important; opacity: 1; }
+  .img-row > .figure-card { grid-column: auto !important; min-width: 0; }

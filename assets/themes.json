@@ -12,7 +12,8 @@
           "--accent-ink": "#002FA7",
           "--hl-bg": "#002FA7",
           "--hl-fg": "#ffffff",
-          "--hl-label": "rgba(255,255,255,0.6)"
+          "--hl-label": "rgba(255,255,255,0.6)",
+          "--accent-deep": "#001d6b"
         }
       },
       {
@@ -26,7 +27,8 @@
           "--accent-ink": "#7a5f00",
           "--hl-bg": "#FFD500",
           "--hl-fg": "#0a0a0a",
-          "--hl-label": "rgba(10,10,10,0.6)"
+          "--hl-label": "rgba(10,10,10,0.6)",
+          "--accent-deep": "#5e4900"
         }
       },
       {
@@ -40,7 +42,8 @@
           "--accent-ink": "#c2410c",
           "--hl-bg": "#FF6B35",
           "--hl-fg": "#0a0a0a",
-          "--hl-label": "rgba(10,10,10,0.6)"
+          "--hl-label": "rgba(10,10,10,0.6)",
+          "--accent-deep": "#9a3409"
         }
       },
       {
@@ -54,7 +57,8 @@
           "--accent-ink": "#4a6400",
           "--hl-bg": "#C5E803",
           "--hl-fg": "#0a0a0a",
-          "--hl-label": "rgba(10,10,10,0.6)"
+          "--hl-label": "rgba(10,10,10,0.6)",
+          "--accent-deep": "#3a5000"
         }
       }
     ],
