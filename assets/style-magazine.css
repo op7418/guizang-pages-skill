@@ -1412,7 +1412,9 @@
      ======================================== */
   @media print {
     body { background: #fff; }
-    .hero, .section { break-inside: avoid; }
+    /* break rules live in ui.css (shared). Never put break-inside:avoid on
+       .section/.hero: a whole chapter that doesn't fit gets pushed to the
+       next page and leaves a half-empty page behind. */
     .gallery { flex-wrap: wrap; overflow: visible; }
     .gallery-item { width: 45%; }
     .gallery-grid { grid-template-columns: 1fr 1fr; }

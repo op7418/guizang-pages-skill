@@ -215,3 +215,42 @@
     html.toc-is-open .toc-scrim { display: block; }
     .toc-panel { width: min(300px, 86vw); }
   }
+
+  /* ══════════════════════════════════════
+     PRINT / PDF — pagination (shared by both styles)
+     Root cause of the "half-empty page" bug: style-magazine.css had
+     `.hero, .section { break-inside: avoid }`, and both themes lay sections
+     out as CSS grids; any chapter taller than the remaining space jumped to
+     the next page whole. Rules now: only small atomic blocks avoid breaking,
+     long containers flow across pages, headings stick to what follows.
+     ══════════════════════════════════════ */
+  @page { size: A4; margin: 14mm 12mm 16mm; }
+  @media print {
+    html, body, body * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html.toc-is-open body, body { padding-left: 0 !important; }
+    .container { max-width: none !important; padding: 0 !important; }
+    /* grid fragmentation is fragile — flow sections as blocks on paper */
+    .section, .hero, footer, .container > .pullquote { display: block !important; }
+    .section-header { display: block !important; }
+    .section, .hero, .process, .gallery, .gallery-grid, .summary-card,
+    .summary-grid, .table-wrap, table, ul, ol, pre, .chart-row,
+    .embed-card, .data-figure { break-inside: auto !important; }
+
+    /* headings never end a page */
+    h1, h2, h3, h4, h5, .section-number, .section-header, .hero-kicker,
+    .def-card-label, .hl-label, .toc-header { break-after: avoid; break-inside: avoid; }
+    p { orphans: 3; widows: 3; }
+
+    /* small atomic blocks: keep whole */
+    blockquote, .def-card, .def-card-swiss, .highlight-card, .highlight-swiss,
+    .pullquote, .pullquote-swiss, .aside-card, .process-step, .big-number,
+    .summary-item, .gallery-item, li, tr, .callout { break-inside: avoid; }
+
+    /* image + caption travel together; cap height (120mm ≈ 45% of an A4 text area). Residual gap: a heading kept with a big figure can still leave up to ~half a page — intended (no orphan heading). so a figure never strands more than ~half a page */
+    figure, .figure-card { break-inside: avoid; }
+    figure img, .figure-card img, img { max-height: 120mm; width: auto; max-width: 100%; object-fit: contain; }
+    figcaption, .figure-caption, .caption { break-before: avoid; }
+    pre { white-space: pre-wrap; word-break: break-all; }
+    .section { padding-top: 12mm !important; padding-bottom: 4mm !important; }
+    a { text-decoration: none; }
+  }

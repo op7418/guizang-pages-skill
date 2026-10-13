@@ -8,7 +8,7 @@
   const STORE = 'hf-page-prefs:' + style;
 
   // ── Helpers ──
-  function toast(msg) {
+  function toast(msg, ms) {
     let t = document.querySelector('.hf-toast');
     if (!t) {
       t = document.createElement('div');
@@ -17,7 +17,8 @@
     }
     t.textContent = msg;
     t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2200);
+    clearTimeout(t._h);
+    t._h = setTimeout(() => t.classList.remove('show'), ms || 2200);
   }
 
   function closeAllDropdowns() {
@@ -53,8 +54,11 @@
   // PDF: use browser print dialog
   document.getElementById('hf-export-pdf').addEventListener('click', () => {
     closeAllDropdowns();
-    toast('正在打开打印对话框…');
-    setTimeout(() => window.print(), 300);
+    // Chrome/Edge/Safari drop background colours unless "Background graphics"
+    // is ticked in the print dialog; CSS print-color-adjust:exact covers Chrome
+    // but not every browser, so tell the user before the dialog opens.
+    toast('打印对话框里展开「更多设置」，勾选「背景图形」，目标选「另存为 PDF」', 4200);
+    setTimeout(() => window.print(), 1200);
   });
 
   // Image: html2canvas → PNG download
@@ -62,6 +66,8 @@
     closeAllDropdowns();
     toast('正在生成长图…');
     try {
+      eagerImages();
+      await Promise.all([...document.images].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; })));
       const h2c = await loadHtml2Canvas();
       // Hide UI elements during capture
       document.querySelectorAll('.hf-fab, .hf-share, .toc').forEach(el => el.style.display = 'none');
@@ -209,6 +215,13 @@
       if (fo && !fo.classList.contains('active')) applyFont(fo);
     }
   } catch (e) {}
+
+  // ── Make lazy images print/export-safe ──
+  // loading="lazy" images below the fold are blank in PDF/long-image exports.
+  function eagerImages() { document.querySelectorAll('img[loading="lazy"]').forEach(i => { i.loading = 'eager'; }); }
+  window.addEventListener('beforeprint', eagerImages);
+  if (document.readyState === 'complete') setTimeout(eagerImages, 800);
+  else window.addEventListener('load', () => setTimeout(eagerImages, 800));
 
   // ── Editable text ──
   const editableSelectors = [
