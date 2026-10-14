@@ -1720,3 +1720,20 @@
   .toc-item { display: grid !important; grid-template-columns: 2.4em 1fr !important; gap: 0 10px !important; border: 0 !important; }
   .toc-num { font-variant-numeric: tabular-nums; text-align: right; opacity: .7; }
   @media print { .doc-chrome-bar { border-top-width: 1px !important; } }
+
+  /* ── v0.17 · 报头一行；CJK 不用斜体；章节号两侧对称星 ───────────── */
+  .doc-chrome.doc-line { display: flex !important; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 0 !important;
+    max-width: var(--col); margin: 0 auto !important; padding: 28px 0 12px !important; border: 0 !important; border-bottom: 1px solid var(--line, rgba(0,0,0,.16)) !important;
+    font-family: var(--font-serif); font-size: 13px; letter-spacing: .04em; color: var(--fg-secondary, var(--fg)); text-align: center; }
+  .doc-line .dl-sep { margin: 0 .7em; opacity: .5; }
+  .doc-line .dl-tag { color: var(--accent-ink, var(--accent)); }
+  /* 中文不倾斜（会变成伪斜体）；斜体只给拉丁文 <i>/<em lang=en> 等 */
+  .hero-subtitle, figcaption, .figure-card figcaption, .section-number, .pullquote, .pullquote *, blockquote, blockquote *, .hc-cap, .table-caption, .bq-cite, em, .toc-item { font-style: normal !important; }
+  :lang(en) em, em:lang(en), i:lang(en) { font-style: italic !important; }
+  .section > .section-number.sn-sym { display: flex !important; justify-content: center !important; align-items: center !important; gap: 0 !important; width: 100%; font-variant-numeric: tabular-nums; }
+  .sn-sym .sn-side { flex: 1 1 0; display: inline-flex; align-items: center; gap: 6px; }
+  .sn-sym .sn-l { justify-content: flex-end; } .sn-sym .sn-r { justify-content: flex-start; }
+  .sn-sym .sn-num { flex: none; margin: 0 14px !important; line-height: 1; font-size: 1.05rem; letter-spacing: .12em; padding-left: .12em; /* 抵消末尾字距，光学居中 */ }
+  .sn-sym .sn-star { margin: 0 !important; line-height: 1; display: inline-block; }
+  .section h3, h1, h2, h3, h4, .hero-subtitle, .hero p, .doc-line { font-style: normal !important; }
+  .doc-chrome.doc-line { max-width: min(var(--wide, 920px), 100%) !important; white-space: normal; } .doc-line > span { white-space: nowrap; }

@@ -643,7 +643,13 @@ const chromeTagsHtml = meta.tags.map(t =>
   `<span class="chrome-tag">${escHtml(t)}</span>`
 ).join('');
 
-bodyHtml += `
+if (!isSwiss) {
+  // Magazine masthead: one quiet line — tags · author · date · reading time, one hairline below.
+  const parts = [...meta.tags.map(t => `<span class="dl-tag">${escHtml(t)}</span>`),
+    meta.author && `<span>${escHtml(meta.author)}</span>`, meta.date && `<span>${escHtml(meta.date)}</span>`,
+    meta.reading_time && `<span>${escHtml(meta.reading_time)}</span>`].filter(Boolean);
+  bodyHtml += `\n<div class="doc-chrome doc-line">${parts.join('<span class="dl-sep">·</span>')}</div>\n`;
+} else bodyHtml += `
 <div class="doc-chrome">
   <div class="doc-chrome-bar">
     <div class="chrome-l">
@@ -711,7 +717,7 @@ for (const sec of sections) {
   if (isSwiss && sec.num && sec.title) {
     bodyHtml += `<div class="section-header"><div class="section-number">${sec.num}</div><h2>${inlineMd(sec.title)}</h2></div>`;
   } else {
-    if (sec.num) bodyHtml += isSwiss ? `<div class="section-number">${sec.num}</div>` : `<div class="section-number"><span class="sn-num">${sec.num}</span><span class="sn-star s1">✦</span><span class="sn-star s2">✦</span><span class="sn-star s3">✦</span></div>`;
+    if (sec.num) bodyHtml += isSwiss ? `<div class="section-number">${sec.num}</div>` : `<div class="section-number sn-sym"><span class="sn-side sn-l"><span class="sn-star s3">✦</span><span class="sn-star s2">✦</span><span class="sn-star s1">✦</span></span><span class="sn-num">${sec.num}</span><span class="sn-side sn-r"><span class="sn-star s1">✦</span><span class="sn-star s2">✦</span><span class="sn-star s3">✦</span></span></div>`;
     if (sec.title) bodyHtml += `<h2>${inlineMd(sec.title)}</h2>`;
   }
   bodyHtml += sec.blocks.join('\n');
