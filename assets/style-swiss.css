@@ -1121,3 +1121,28 @@
   .toc-item { display: grid !important; grid-template-columns: 2.4em 1fr !important; gap: 0 10px !important; border: 0 !important; }
   .toc-num { font-variant-numeric: tabular-nums; }
   .section.section .figure-card figcaption, .section.section figcaption { font-size: 12px !important; font-family: var(--font-sans) !important; line-height: 1.55 !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--fg-secondary, var(--fg)) !important; }
+
+  /* ── v0.18 · 移动端页头：不溢出、不重叠（≤640px）；桌面不变 ───────── */
+  @media (max-width: 640px) {
+    html, body { overflow-x: hidden; }
+    .doc-chrome { padding-top: 72px !important; row-gap: 14px !important; }  /* 让开固定的目录按钮 */
+    .doc-chrome-bar { flex-wrap: wrap; gap: 6px 12px; padding: 12px 14px !important; font-size: 11px !important; letter-spacing: .1em !important; margin-bottom: 0 !important; }
+    .doc-chrome-bar .chrome-l, .doc-chrome-bar .chrome-r { gap: .8em; flex-wrap: wrap; min-width: 0; }
+    .doc-chrome-bar .chrome-sep { width: 14px; }
+    .doc-chrome-meta { gap: 6px 1.2em !important; font-size: 11px !important; letter-spacing: .08em !important; }
+    .doc-chrome-meta .cm-dot { display: none; }
+    .doc-chrome-meta .cm-item { min-width: 0; flex-wrap: wrap; }
+    .doc-chrome-tags { gap: 6px !important; }
+    .doc-chrome-tags .chrome-tag { padding: 3px 10px; font-size: 10.5px; }
+    /* hero：图在上、文字在下的深色块，不再叠字在图上被裁切 */
+    .hero-cover { display: flex !important; flex-direction: column; overflow: visible; }
+    .hero-cover::before { bottom: auto; height: 220px; }
+    .hero-cover .hero-bg { height: 220px !important; opacity: .55; }
+    .hero-cover .hero-overlay { position: relative !important; inset: auto; padding: 22px 20px 26px !important; }
+    .hero-cover h1 { font-size: 1.75rem !important; line-height: 1.28 !important; letter-spacing: -0.01em !important; margin-bottom: 14px !important; overflow-wrap: anywhere; }
+    .hero-cover .hero-subtitle { font-size: .95rem !important; line-height: 1.7 !important; color: rgba(250,250,248,.78) !important; }
+    .hero-cover .hero-kicker { margin-bottom: 12px; }
+    .section-header .section-number { font-size: 24px !important; }
+    .section.section > * { min-width: 0; }
+    .table-wrap { overflow-x: auto; }
+  }
