@@ -1747,3 +1747,13 @@
     .section > * { min-width: 0; }
     .table-wrap { overflow-x: auto; }
   }
+
+  /* v0.19 链接/长串不两端对齐：含链接的段落、列表项、来源/参考节一律起始对齐；长 URL / 代码可任意断行，避免 justify 把冒号前的字拉开 */
+  :lang(zh) .section li,
+  .section > p:has(a.url, a[href^="http"], code),
+  .section.refs p, .section.refs li { text-align: start !important; text-justify: auto; }
+  .section a.url { overflow-wrap: anywhere; word-break: break-word; }
+  .section code { overflow-wrap: anywhere; word-break: break-all; }
+  .section p, .section li { overflow-wrap: break-word; }
+  /* 英文段落仍两端对齐，但开启连字符断词，减少长单词造成的大空隙 */
+  .section > p:lang(en) { hyphens: auto; -webkit-hyphens: auto; }

@@ -43,7 +43,7 @@
 | T2 | 正文字号 | 17px（`--text-size: 1.0625rem`） | 设计决定：原 15.2px 对汉字偏小 |
 | T3 | 正文行高 | 杂志风 1.85，瑞士风 1.8（`--text-leading`） | 文章库《一万六千字字体与排版指南》：中文 1.5–2 倍，1.2 过密 |
 | T4 | 行长 | `max-width: 36em` ≈ 每行 36 个汉字（1440 宽屏实测 612px） | 文章库 Baymard 行长 50–75 拉丁字符、WCAG 1.4.8 ≤80；换算到汉字的 36 字为**本 skill 的推断值**；clreq 2.3.5 建议行长为字号整数倍（em 单位天然满足） |
-| T5 | 对齐 | 正文 `text-align: justify; text-justify: inter-character`；列表项内段落左对齐 | clreq §6.2 正文原则上两端对齐 |
+| T5 | 对齐 | 正文 `text-align: justify; text-justify: inter-character`；列表项、含链接/代码的段落、来源/参考节一律 `start` 对齐；裸 URL 自动转 `<a class="url">`（显示截至 40 字符 + …），长串 `overflow-wrap:anywhere`；英文段落 `hyphens:auto` | clreq §6.2 正文原则上两端对齐 |
 | T6 | 分段 | 不首行缩进，段间距 1em | clreq：段首不缩进、以段间空白分段是可接受的版式 |
 | T7 | 字距 | 中文正文与标题 `letter-spacing: 0`（英文 Latin 可保留微调） | 汉字为等宽方块，额外字距破坏密排；标题负字距会导致笔画粘连 |
 | T8 | 避头尾 | `line-break: strict` | clreq §6.1.1 行首行尾禁则 |

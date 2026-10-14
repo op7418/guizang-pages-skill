@@ -80,6 +80,19 @@ for (const u of anno.upgrades) {
 }
 
 // ── Inline markdown helpers ──
+// ── Bare URL → link. Scheme / www. / domain+path, or bare domain with a common TLD. ──
+const URL_RE = /((?:https?:\/\/|www\.)[^\s<>"'，。；、）」』]+|(?<![\w@./-])(?:[a-z0-9-]+\.)+(?:com|org|net|dev|io|ai|se|wiki|app|co|cn|me|gg|xyz|so|sh|tv)(?:\/[^\s<>"'，。；、）」』]*)?)/i;
+function autoLink(raw) {
+  if (/…|\.\.\.|[<>{}]/.test(raw)) return raw; // placeholder / templated string, not a real address
+  let url = raw, tail = '';
+  const m = url.match(/[.,;:!?)\]]+$/); if (m) { tail = m[0]; url = url.slice(0, -tail.length); }
+  const href = /^https?:\/\//i.test(url) ? url : 'https://' + url;
+  let disp = url.replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '');
+  if (disp.length > 42) disp = disp.slice(0, 40) + '…';
+  const esc = (x) => x.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  return `<a class="url" href="${esc(href)}" title="${esc(href)}" target="_blank" rel="noopener">${esc(disp)}</a>${tail}`;
+}
+
 function inlineMd(text) {
   // Arrows & dashes typed in plain markdown — skipped inside `code` spans.
   const glyphs = (t) => {
@@ -94,7 +107,11 @@ function inlineMd(text) {
   t = t.replace(/——(?![^<]*<\/span>)/g, '<span class="dash">——</span>');
     return t;
   };
-  text = text.split(/(`[^`]+`)/).map((seg, k) => k % 2 ? seg : glyphs(seg)).join('');
+  // Split off `code`, existing [md](links) and bare URLs so glyph rewriting never touches them;
+  // bare URLs become real <a> with shortened display text (domain/path…) — see autoLink().
+  text = text.split(/(`[^`]+`)/).map((seg, k) => k % 2 ? seg
+    : seg.split(/(\[[^\]]+\]\([^)]+\))/).map((s2, j) => j % 2 ? s2
+      : s2.split(URL_RE).map((s3, i) => i % 2 ? autoLink(s3) : glyphs(s3)).join('')).join('')).join('');
   // Bold
   text = text.replace(/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g, '<strong><a href="$2">$1</a></strong>');
   text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
@@ -713,7 +730,8 @@ for (const sec of sections) {
   const secId = sec.num ? `s-${sec.num}` : `s-${secIdx}`;
   if (sec.title) tocItems.push({ id: secId, num: sec.num, title: sec.title });
   const isFootnote = sec.title && /footnote|脚注|注释|注脚/i.test(sec.title);
-  bodyHtml += `<section class="section${isFootnote ? ' section-footnote' : ''}" id="${secId}">`;
+  const isRefs = /来源|参考|资料|延伸阅读|链接|references?|sources?|further reading/i.test(sec.title || '');
+  bodyHtml += `<section class="section${isFootnote ? ' section-footnote' : ''}${isRefs ? ' refs' : ''}" id="${secId}">`;
   if (isSwiss && sec.num && sec.title) {
     bodyHtml += `<div class="section-header"><div class="section-number">${sec.num}</div><h2>${inlineMd(sec.title)}</h2></div>`;
   } else {
