@@ -48,6 +48,14 @@
     --para-gap: 1em;
   }
 
+  /* zh documents: the CJK face comes first, so digits and Latin inside Chinese text use its own
+     glyphs and sit on the same baseline (Source Serif 4 / Inter digits look sunk next to Noto CJK).
+     English documents keep the Latin-first stacks. The font picker overrides --font-serif inline. */
+  :root:lang(zh) {
+    --font-serif: 'Noto Serif SC', 'Source Serif 4', 'Source Han Serif SC', 'Songti SC', 'STSong', Georgia, serif;
+    --font-sans: 'Noto Sans SC', 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
+  }
+
   /* Dark theme (midnight-ink): every colour above already follows the theme */
   :root[data-scheme="dark"] img { opacity: 0.94; }
 
@@ -155,18 +163,24 @@
      HERO
      ======================================== */
   .hero {
-    padding: 72px 0 40px;
-    border-bottom: 1px solid var(--border);
+    padding: 72px 0 24px;           /* the ornament closes the hero; no second rule */
     text-align: center;
   }
 
+  /* Ornament under the title: Lucide "sparkle" (ISC licence), thin stroke, accent colour */
   .hero::after {
-    content: "❦";
+    content: "";
     grid-column: 1 / -1;
     justify-self: center;
-    margin-top: 34px;
-    color: var(--accent-ink, var(--accent));
-    font-size: 1.4rem;
+    width: 18px;
+    height: 18px;
+    margin-top: 36px;
+    background: var(--accent-ink, var(--accent));
+    -webkit-mask: var(--orn-sparkle) center / contain no-repeat;
+    mask: var(--orn-sparkle) center / contain no-repeat;
+  }
+  :root {
+    --orn-sparkle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.1' stroke-linejoin='round'%3E%3Cpath d='M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z'/%3E%3C/svg%3E");
   }
 
   .hero h1 {
@@ -375,7 +389,7 @@
     width: 12px;
     height: 12px;
     border: 1.5px solid var(--border);
-    border-radius: 2px;
+    border-radius: 0;
   }
 
   /* ========================================
@@ -385,7 +399,7 @@
     margin: var(--space-lg) 0;
     padding: 4px 0 4px 24px;
     border-left: 1px solid var(--accent);
-    border-radius: 0 2px 2px 0;
+    border-radius: 0;
   }
 
   .section > blockquote {
@@ -479,7 +493,7 @@
     padding: var(--space-lg);
     background: var(--bg-highlight);
     color: var(--fg-highlight);
-    border-radius: 3px;
+    border-radius: 0;
     box-shadow: inset 4px 0 0 var(--accent-ink-inverse);
     position: relative;
   }
@@ -491,7 +505,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    border-radius: 3px;
+    border-radius: 0;
     opacity: 0.04;
     pointer-events: none;
     /* crosshatch texture via SVG */
@@ -523,13 +537,14 @@
   /* ========================================
      DEFINITION CARD — glossary style
      ======================================== */
+  /* Glossary entries read as one set: hairline between entries, a firmer rule above and below the run */
   .def-card {
-    margin: var(--space-lg) 0;
-    padding: var(--space-md) var(--space-lg);
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 3px;
+    margin: 0;
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--border);
   }
+  .def-card:not(.def-card + .def-card) { margin-top: var(--space-lg); border-top: 1px solid var(--fg); }
+  .def-card:not(:has(+ .def-card)) { margin-bottom: var(--space-lg); border-bottom: 1px solid var(--fg); }
 
   .def-card-label {
     font-family: var(--font-mono);
@@ -558,10 +573,9 @@
      ======================================== */
   .aside-card {
     margin: var(--space-lg) 0;
-    padding: var(--space-md) var(--space-lg);
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 3px;
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--fg);
+    border-bottom: 1px solid var(--border);
     display: flex;
     gap: var(--space-md);
     align-items: flex-start;
@@ -604,11 +618,10 @@
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--accent-on-text);
-    background: var(--accent);
+    color: var(--accent-ink, var(--accent));
     display: inline-block;
-    padding: var(--space-xs) var(--space-md);
-    border-radius: 2px;
+    padding: 0;
+    border-radius: 0;
     margin-bottom: var(--space-md);
   }
 
@@ -619,10 +632,8 @@
   }
 
   .summary-item {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 3px;
-    padding: var(--space-md) var(--space-lg);
+    border-top: 1px solid var(--fg);
+    padding: var(--space-md) 0 var(--space-sm);
   }
 
   .summary-item-title {
@@ -685,9 +696,9 @@
      ======================================== */
   .embed-card {
     margin: var(--space-xl) 0;
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 3px;
+    padding: var(--space-md) 0;
+    border-top: 1px solid var(--fg);
+    border-bottom: 1px solid var(--border);
     overflow: hidden;
   }
 
@@ -697,9 +708,8 @@
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--accent-on-text);
-    padding: var(--space-xs) var(--space-md);
-    background: var(--accent);
+    color: var(--accent-ink, var(--accent));
+    padding: 0;
     display: inline-block;
   }
 
@@ -749,7 +759,7 @@
 
   .gallery::-webkit-scrollbar-thumb {
     background: var(--border);
-    border-radius: 2px;
+    border-radius: 0;
   }
 
   .gallery-item {
@@ -763,7 +773,7 @@
     height: 180px;
     object-fit: cover;
     display: block;
-    border-radius: 2px;
+    border-radius: 0;
     border: 1px solid var(--border-light);
   }
 
@@ -791,7 +801,7 @@
     aspect-ratio: 16/9;
     background: var(--bg-card);
     border: 1px solid var(--border-light);
-    border-radius: 2px;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -836,7 +846,7 @@
     width: 100%;
     height: auto;
     display: block;
-    border-radius: 2px;
+    border-radius: 0;
     border: 1px solid var(--border-light);
     object-fit: cover;
   }
@@ -972,7 +982,7 @@
     padding: var(--space-md) var(--space-lg);
     background: var(--fg);
     color: var(--bg);
-    border-radius: 3px;
+    border-radius: 0;
     overflow-x: auto;
     font-family: var(--font-mono);
     font-size: 0.82rem;
@@ -989,7 +999,7 @@
     font-size: 0.85em;
     background: var(--border-light);
     padding: 2px 5px;
-    border-radius: 2px;
+    border-radius: 0;
   }
   .section code { overflow-wrap: anywhere; word-break: break-all; }
 
@@ -1012,7 +1022,7 @@
     display: flex; align-items: center; justify-content: center;
     background: var(--bg-card);
     border: 1px solid var(--border-light);
-    border-radius: 3px;
+    border-radius: 0;
     cursor: pointer;
     color: var(--fg-tertiary);
     transition: background 0.15s, color 0.15s, border-color 0.15s;

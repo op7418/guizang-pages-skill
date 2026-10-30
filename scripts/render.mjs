@@ -386,7 +386,7 @@ for (let i = 0; i < originalLines.length; i++) {
       j++;
     }
     skipUntil = j + 1;
-    const radius = styleName === 'magazine' ? '3px' : '0';
+    const radius = '0';
     const cap = alt => alt && !alt.startsWith('img_') ? `<figcaption>${capHtml(inlineMd(escHtml(alt)))}</figcaption>` : '';
     const one = (im, cls = '') => `<figure class="figure-card${cls}"><img src="${escHtml(im.src)}" alt="${escHtml(im.alt)}" loading="lazy" style="border-radius:${radius}" />${cap(im.alt)}</figure>`;
     if (imgs.length === 1) addBlock(one(imgs[0]));

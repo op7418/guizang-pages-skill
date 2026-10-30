@@ -117,7 +117,6 @@
     gap: 22px var(--gutter);
     align-items: center;
     padding: 56px 0 14px;
-    border-bottom: 3px solid var(--fg);
   }
 
   .doc-chrome-bar {
@@ -131,7 +130,7 @@
     padding: var(--sp-5) var(--sp-6) 18px;
     margin-bottom: var(--sp-5);
   }
-  .doc-chrome > .doc-chrome-bar { grid-area: bar; border-bottom: 2px solid var(--fg); }
+  .doc-chrome > .doc-chrome-bar { grid-area: bar; }
 
   .doc-chrome-bar .chrome-l, .doc-chrome-bar .chrome-r {
     display: flex; gap: 1.8em; align-items: center;
@@ -245,11 +244,16 @@
     line-height: 0.85;
     flex-shrink: 0;
   }
+  /* The number sits in the rail, vertically centred on the title's first line
+     (box = one title line; the small lift puts the digits' ink centre on the CJK glyph centre) */
   .section-header .section-number {
-    position: absolute; right: calc(100% + var(--rail-gap)); bottom: 0.08em;
+    position: absolute; right: calc(100% + var(--rail-gap)); top: 0;
+    height: calc(var(--fs-heading) * 1.2);
+    display: flex; align-items: center;
     width: var(--rail);
     font-size: 44px; font-weight: 300; line-height: 1;
     color: var(--num-grey);
+    transform: translateY(-0.035em);   /* measured: digits sit ~1.5px low at 44px */
   }
 
   h2 {
