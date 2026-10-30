@@ -83,7 +83,7 @@
 
   ::selection {
     background: var(--accent);
-    color: var(--accent-on);
+    color: var(--accent-on-text);
   }
 
   /* ========================================
@@ -604,7 +604,7 @@
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--accent-on);
+    color: var(--accent-on-text);
     background: var(--accent);
     display: inline-block;
     padding: var(--space-xs) var(--space-md);
@@ -697,7 +697,7 @@
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--accent-on);
+    color: var(--accent-on-text);
     padding: var(--space-xs) var(--space-md);
     background: var(--accent);
     display: inline-block;
@@ -944,14 +944,15 @@
   .hc-group { padding: 16px 0; border-top: 1px solid var(--tbl-line); }
   .hc-label { font-size: 0.82rem; color: var(--fg); line-height: 1.35; }
   .hc-bars { display: grid; gap: 6px; }
-  .hc-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 20px; }
+  .hc-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 20px; padding-right: 5em; }  /* room for the value after a 100% bar */
   .hc-group .hc-bar { height: 14px; }
   .hc-fill { display: block; height: 100%; background: var(--hc-mute); flex: none; }
   .hc-val { font-size: var(--fs-meta); font-variant-numeric: tabular-nums; color: var(--fg-secondary); white-space: nowrap; }
   .hc-group .hc-val { font-size: var(--fs-meta); }
   .hc-hi .hc-fill, .hc-key.hc-hi i { background: var(--accent); }
   .hc-hi .hc-val, .hc-row.hc-hi .hc-label { color: var(--fg); font-weight: 600; }
-  .hc-s1.hc-hi .hc-fill, .hc-key.hc-s1.hc-hi i { background: var(--accent); opacity: 0.6; }
+  /* both series highlighted: the second one is lighter so the pair stays distinguishable */
+  .hc-s0.hc-hi ~ .hc-s1.hc-hi .hc-fill, .hc-key.hc-s0.hc-hi ~ .hc-key.hc-s1.hc-hi i { opacity: 0.6; }
   .hc-na .hc-val { color: var(--fg-tertiary); font-style: italic; }
   .hc-cap {
     margin-top: 20px;
@@ -1160,9 +1161,22 @@
      next page and leaves a half-empty page behind.
      ======================================== */
   @media print {
-    :root[data-scheme="light"] body { background: #fff; }
     .gallery { flex-wrap: wrap; overflow: visible; }
     .gallery-item { width: 45%; }
     .img-strip { flex-wrap: wrap; overflow: visible; }
     .img-strip-hint { display: none; }
+  }
+
+  /* ========================================
+     FOOTNOTES — [^n] references and the list at the end
+     ======================================== */
+  sup.fn-ref { font-size: .72em; line-height: 0; margin-left: 1px; }
+  sup.fn-ref a, .fn-back { color: var(--accent-ink); text-decoration: none; }
+  .footnotes li { scroll-margin-top: 80px; }
+
+  /* Phones: diagrams keep a readable size and scroll sideways; table headers don't break inside a word */
+  .table-wrap th { word-break: keep-all; }
+  @media (max-width: 640px) {
+    .embed-body { overflow-x: auto; }
+    .embed-body > svg { min-width: 520px; }
   }

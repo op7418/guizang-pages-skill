@@ -5,7 +5,8 @@
   // into the HTML statically, so this file only wires up behaviour.
   const style = document.documentElement.dataset.hfStyle || 'swiss';
   const $ = (id) => document.getElementById(id);
-  const STORE = 'hf-page-prefs:' + style;
+  // Per page: a reader's choice on one page (or a brand page's palette) doesn't leak into other pages
+  const STORE = 'hf-page-prefs:' + style + ':' + location.pathname;
 
   // ── Helpers ──
   function closeAllDropdowns() {

@@ -133,7 +133,7 @@ doc/                  产品文档、交接说明、已知问题
 
 排版问题、新组件需求，欢迎开 Issue 或 PR。新增设计规则请同步写进 `references/design-rules.md`，已知问题记录在 `doc/known-issues.md`。
 
-主题、字号角色、字体和间距来自共享设计系统：`assets/gz-*.css`、`assets/themes.json`、`references/themes.md`、`references/gz-components.md` 和 `scripts/gz-*.mjs` 是生成的，不要手改；新主题色或字号调整请提 Issue。`assets/style-*.css` 只写版式，颜色用语义变量，不写颜色值。
+主题、字号角色、字体和间距来自共享设计系统：`assets/gz-*.css`、`assets/themes.json`、`references/themes.md` 和 `scripts/gz-*.mjs` 是生成的，不要手改；新主题色或字号调整请提 Issue。`assets/style-*.css` 只写版式，颜色用语义变量，不写颜色值。
 
 ## License
 

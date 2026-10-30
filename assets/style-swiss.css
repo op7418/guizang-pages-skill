@@ -12,7 +12,7 @@
     --fg-placeholder: var(--text-placeholder);
     --bg: var(--paper);
     --bg-card: var(--grey-1);
-    --hl-bg: var(--accent); --hl-fg: var(--accent-on); --hl-label: rgba(var(--accent-on-rgb), .6);
+    --hl-bg: var(--accent); --hl-fg: var(--accent-on-text); --hl-label: rgba(var(--accent-on-text-rgb), .6);
     --hc-mute: rgba(var(--ink-rgb), .2);
     --num-grey: rgba(var(--ink-rgb), .2);
     --measure: 1200px;
@@ -311,7 +311,7 @@
   .checklist li::after {
     content: ''; position: absolute; left: 3px; top: 10px;
     width: 8px; height: 4px;
-    border-left: 2px solid var(--accent); border-bottom: 2px solid var(--accent);
+    border-left: 2px solid var(--accent-ink); border-bottom: 2px solid var(--accent-ink);
     transform: rotate(-45deg);
   }
 
@@ -574,14 +574,15 @@
   .hc-group { padding: 16px 0; border-top: 1px solid rgba(var(--ink-rgb), .08); }
   .hc-label { font-size: 0.82rem; color: var(--fg); line-height: 1.35; }
   .hc-bars { display: grid; gap: 6px; }
-  .hc-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 20px; }
+  .hc-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 20px; padding-right: 5em; }  /* room for the value after a 100% bar */
   .hc-group .hc-bar { height: 14px; }
   .hc-fill { display: block; height: 100%; background: var(--hc-mute); flex: none; }
   .hc-val { font-size: var(--fs-meta); font-variant-numeric: tabular-nums; color: var(--fg-secondary); white-space: nowrap; }
   .hc-group .hc-val { font-size: var(--fs-meta); }
   .hc-hi .hc-fill, .hc-key.hc-hi i { background: var(--accent); }
   .hc-hi .hc-val, .hc-row.hc-hi .hc-label { color: var(--fg); font-weight: 600; }
-  .hc-s1.hc-hi .hc-fill, .hc-key.hc-s1.hc-hi i { background: var(--accent); opacity: 0.6; }
+  /* both series highlighted: the second one is lighter so the pair stays distinguishable */
+  .hc-s0.hc-hi ~ .hc-s1.hc-hi .hc-fill, .hc-key.hc-s0.hc-hi ~ .hc-key.hc-s1.hc-hi i { opacity: 0.6; }
   .hc-na .hc-val { color: var(--fg-tertiary); font-style: italic; }
   .hc-cap { margin-top: 20px; }
 
@@ -756,7 +757,7 @@
     grid-template-columns: repeat(12, 1fr);
     column-gap: var(--gutter);
   }
-  .divider-dot { margin: var(--sp-10) auto; text-align: center; color: var(--fg-placeholder); font-size: 14px; letter-spacing: 10px; }
+  .divider-dot { display: block; margin: var(--sp-10) auto; text-align: center; color: var(--fg-placeholder); font-size: 14px; letter-spacing: 10px; }
   .container > footer { padding: var(--sp-10) 0 var(--sp-12); text-align: center; }
   .container > footer > * { grid-column: 1 / -1; }
   .container > footer p { font-family: var(--font-mono); font-size: var(--fs-meta); font-weight: 500; letter-spacing: 0.14em; color: var(--fg-tertiary); text-transform: uppercase; }
@@ -775,6 +776,7 @@
 
   @media (max-width: 1024px) {
     .container { padding: 0 var(--sp-9); }
+    .doc-chrome { padding-top: 76px; }  /* the fixed TOC button (24 + 40px) sits over the left margin */
     .section-number { font-size: 14px; font-weight: 500; color: var(--accent-ink, var(--accent)); letter-spacing: 0.14em; }
     .hero-cover .hero-bg { height: 360px; }
     .hero-cover h1 { font-size: 2.4rem; }
@@ -823,7 +825,6 @@
      PRINT (shared pagination rules live in ui.css)
      ══════════════════════════════════════ */
   @media print {
-    body { background: #fff; }
     .hero-cover .hero-bg { filter: brightness(0.4); }
     .def-card-swiss, .aside-card, .process-step { background: var(--grey-1); }
     .gallery-grid { grid-template-columns: 1fr 1fr; }
@@ -836,4 +837,18 @@
     .section > .figure-card > figcaption { border-top: 0; padding-top: 6px; }
     .img-strip { overflow: visible; }
     .img-strip-hint { display: none; }
+  }
+
+  /* ========================================
+     FOOTNOTES — [^n] references and the list at the end
+     ======================================== */
+  sup.fn-ref { font-size: .72em; line-height: 0; margin-left: 1px; }
+  sup.fn-ref a, .fn-back { color: var(--accent-ink); text-decoration: none; }
+  .footnotes li { scroll-margin-top: 80px; }
+
+  /* Phones: diagrams keep a readable size and scroll sideways; table headers don't break inside a word */
+  .table-wrap th { word-break: keep-all; }
+  @media (max-width: 640px) {
+    .embed-body { overflow-x: auto; }
+    .embed-body > svg { min-width: 520px; }
   }

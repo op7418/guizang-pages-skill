@@ -178,11 +178,16 @@
      the next page whole. Rules now: only small atomic blocks avoid breaking,
      long containers flow across pages, headings stick to what follows.
      ══════════════════════════════════════ */
-  @page { size: A4; margin: 14mm 12mm 16mm; }
+  /* Page margins live inside the page (container padding repeated on every page via
+     box-decoration-break), so the theme's paper colour fills the whole sheet — Chrome
+     doesn't paint @page margins, which left a white frame around dark themes. */
+  @page { size: A4; margin: 0; }
   @media print {
     html, body, body * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    html { background: var(--bg); }
     html.toc-is-open body, body { padding-left: 0 !important; }
-    .container { max-width: none !important; padding: 0 !important; }
+    .container { max-width: none !important; padding: 14mm 12mm 16mm !important; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+    .embed-label, .summary-label, .aside-title { break-after: avoid; }
     /* grid fragmentation is fragile — flow sections as blocks on paper */
     .section, .hero, footer, .container > .pullquote { display: block !important; }
     .section-header { display: block !important; }
@@ -230,7 +235,7 @@
     .img-row img { max-height: 42mm !important; }
     .media-embed video, .media-embed iframe { max-height: 58mm !important; }
     figure, .figure-card { margin-top: 3mm !important; margin-bottom: 3mm !important; }
-    .figure-card > figcaption { margin-top: 1.5mm !important; }
+    .figure-card > figcaption { margin-top: 1.5mm !important; text-align: center; }  /* images shrink and centre on paper */
 
     /* headings stay with the next *line*, not with a whole big block */
     h2, h3, .section-header, .section-number { break-after: avoid; }

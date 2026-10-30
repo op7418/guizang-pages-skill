@@ -42,7 +42,7 @@ async function loadPuppeteer() {
       try { const p = req.resolve(name, { paths: [root] }); const m = await import(pathToFileURL(p).href); return { mod: m.default || m, name }; } catch (_) {}
     }
   }
-  throw new Error('puppeteer / puppeteer-core not found — run `npm i puppeteer-core` in the skill folder');
+  throw new Error('puppeteer / puppeteer-core not found — run `npm install` in the skill folder');
 }
 function chromePath() {
   const c = [process.env.CHROME_PATH, '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium', '/usr/bin/chromium-browser',
@@ -88,15 +88,29 @@ await page.waitForNetworkIdle({ idleTime: 500, timeout: 60000 }).catch(() => {})
 const broken = await page.evaluate(() => [...document.images].filter(i => !i.naturalWidth).map(i => i.getAttribute('src')));
 if (broken.length) console.warn('! images failed to load:', broken.join(', '));
 
-if (opt.png) {
-  await page.addStyleTag({ content: '.hf-fab,.toc,.toc-scrim{display:none!important}' });
-  await page.evaluate(() => document.documentElement.classList.remove('toc-is-open'));
-  await page.screenshot({ path: resolve(opt.png), fullPage: true, captureBeyondViewport: true });
-  console.log('✓ PNG →', resolve(opt.png));
-}
+// PDF first: the long-image capture resizes the viewport and hides UI, which the print layout would inherit
 if (opt.pdf) {
   await page.emulateMediaType('print');
   await page.pdf({ path: resolve(opt.pdf), format: opt.format, printBackground: true, preferCSSPageSize: true });
+  await page.emulateMediaType('screen');
   console.log('✓ PDF →', resolve(opt.pdf));
+}
+if (opt.png) {
+  await page.addStyleTag({ content: '.hf-fab,.toc,.toc-scrim{display:none!important}' });
+  await page.evaluate(() => document.documentElement.classList.remove('toc-is-open'));
+  // Chrome can't capture more than 16384 device pixels in one go: past that the bottom of the image
+  // repeats the top of the page. Lower the pixel ratio so the whole page fits.
+  const MAX = 16000;
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  let dpr = parseFloat(opt.scale) || 2;
+  if (height * dpr > MAX) {
+    const fit = Math.floor((MAX / height) * 100) / 100;
+    if (fit < 0.5) console.warn(`! 页面高 ${height}px，长图会很糊；建议只导 PDF，或把文章拆成几页`);
+    console.warn(`! 页面高 ${height}px，${dpr}x 超过长图上限，改用 ${fit}x`);
+    dpr = fit;
+    await page.setViewport({ width, height: 900, deviceScaleFactor: dpr });
+  }
+  await page.screenshot({ path: resolve(opt.png), fullPage: true, captureBeyondViewport: true });
+  console.log('✓ PNG →', resolve(opt.png));
 }
 await browser.close();
