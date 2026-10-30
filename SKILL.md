@@ -22,15 +22,17 @@ Markdown 原文 ──→ annotations.json ──→ render.mjs ──→ output
 
 | 风格 | 美学锚点 | 特征 |
 |------|----------|------|
-| **杂志风 (Magazine)** | Monocle × 复印件 | 衬线标题、暖灰底 `#f6f4f0`、赤褐色 accent `#c45a3c`、交叉线纹理、微圆角 |
-| **瑞士风 (Swiss)** | Helvetica Forever | 无衬线极细体、冷灰底 `#fafaf8`、克莱因蓝 `#002FA7`、卡片语言、直角、网格点阵 |
+| **杂志风 (Magazine)** | Monocle × 复印件 | 衬线标题、米白纸色、墨色为主（默认墨水经典）、交叉线纹理、微圆角 |
+| **瑞士风 (Swiss)** | Helvetica Forever | 无衬线极细体、冷灰底、单一锚点色（默认克莱因蓝）、卡片语言、直角、网格点阵 |
+
+两种风格的配色与 PPT、图文卡片 skill 是同一套主题（杂志风 6 套、瑞士风 4 套），见 `references/themes.md`。
 
 ### 两种模式
 
 | 模式 | 用途 | 标注量 |
 |------|------|--------|
 | **忠实模式** | 原文全量保留，少量升格 | 10-20 条标注 |
-| **解释模式** | 原文保留 + 插入解释性组件 + 语言过滤 | 40-60 条标注 |
+| **解释模式** | 原文保留 + 插入解释性组件 + 语言过滤 | 按篇幅，约每千字 3–5 个解释组件 |
 
 ## 何时使用
 
@@ -46,6 +48,7 @@ Markdown 原文 ──→ annotations.json ──→ render.mjs ──→ output
 2. **哪种模式？** 忠实（保留原文）/ 解释（增加可视化）
 3. **什么语言？** 如果是双语文档，选主语言（zh / en）
 4. **有没有特定配图需求？** 默认从 Unsplash 取通用高质量图
+5. **配色？** 不问也可以，用默认主题；内容有明确调性时从 `references/themes.md` 选一套；用户给了品牌色或 logo 主色就用 `--brand`
 
 ### Step 2 · 分析文档，生成 annotations.json
 
@@ -85,7 +88,7 @@ Markdown 原文 ──→ annotations.json ──→ render.mjs ──→ output
     "tags": ["标签1", "标签2"],
     "subtitle": "一句话摘要",
     "hero_image": "https://images.unsplash.com/photo-xxx?w=1400&h=600&fit=crop",
-    "lang": "zh"
+    "lang": null
   },
   "upgrades": [
     { "type": "pullquote", "line": 37, "accent": "关键词" },
@@ -112,22 +115,30 @@ Markdown 原文 ──→ annotations.json ──→ render.mjs ──→ output
 **关键约束**：
 - `line` 字段是原始 markdown 文件的 1-based 行号
 - 忠实模式下 `upgrades` 数组只包含 pullquote / highlight / def-card / drop / gallery / process / checklist
-- 解释模式额外包含 figure / embed / aside / summary-card
+- 解释模式额外包含 figure / embed / aside / summary-card：组件**插在 `line` 那一行之前**，那一行原文照常输出，不会被替换；`line` 可以指向空行（插在两段之间最稳）
+- 同一份文档可以有多个 process / checklist，各自用自己的 `lines`
+- 渲染时终端会列出每类标注的数量；行号打在空行或类型对不上（例如 pullquote 指向的不是加粗句）会给出警告，按警告改行号再渲染
+- 杂志风的头部只有标题和副标题，`hero_image` 只在瑞士风显示
+- 瑞士风顶栏的 ARTICLE / FINAL 来自 Markdown frontmatter 的 `type` / `status`（例如 `type: release-note`），没有 frontmatter 时显示默认值
 - 双语文档设置 `meta.lang` 后，渲染器自动过滤另一种语言的段落
 
 ### Step 3 · 运行渲染脚本
 
 ```bash
-node scripts/render.mjs <input.md> <annotations.json> <output.html> --style swiss|magazine
+node scripts/render.mjs <input.md> <annotations.json> <output.html> --style swiss|magazine [--theme <id>] [--brand "#hex"] [--embed]
 ```
+
+- `--theme`：初始配色，id 见 `references/themes.md`（也可写 `meta.theme`）
+- `--brand`：用户的品牌色，生成受约束的品牌主题（也可写 `meta.brand`）；终端会打印调整了什么，不达标时退回预设
+- `--embed`：把页面用到的字体子集化内置进 HTML。页面要离线看、要发给国内网络打不开 Google Fonts 的人、或要导出 PDF / 长图时用；首次使用先在 skill 目录 `npm install`。不加时字体走在线链接，文件约 120KB
 
 脚本自动：
 1. 读取 markdown + annotations
 2. 按行匹配升格标注
 3. 未标注的行走默认 prose 渲染
-4. 内联 CSS（从 `assets/style-*.css`）
-5. 生成单文件 HTML（无外部依赖，除 Google Fonts CDN）
-6. Swiss 模式自动加 TOC 侧边栏 + scroll spy
+4. 内联 CSS：设计系统（`assets/gz-<风格>.css`：主题、字号角色、间距）+ 风格版式（`assets/style-<风格>.css`）+ 设置面板
+5. 生成单文件 HTML（默认只依赖在线字体；`--embed` 后无外部依赖）
+6. 自动加 TOC 侧边栏 + scroll spy
 
 ### Step 4 · 在浏览器中打开验证
 
@@ -146,15 +157,20 @@ open output.html
 
 ### Step 5 · 导出 PDF / 长图（模型执行，页面里没有导出按钮）
 
-用户要 PDF 或长图时，由模型运行导出脚本（依赖 Chrome + `puppeteer-core`，首次在 skill 目录 `npm i puppeteer-core`；Chrome 路径可用 `CHROME_PATH` 指定）：
+用户要 PDF 或长图时，由模型运行导出脚本（依赖 Chrome + `puppeteer-core`，首次在 skill 目录 `npm install`；Chrome 路径可用 `CHROME_PATH` 指定）：
 
 ```bash
 node scripts/export.mjs output.html --pdf output.pdf                 # A4，走页面的 print CSS（空白预算 ≤25%/页）
 node scripts/export.mjs output.html --png output.png --width 1440    # 全页长图，默认 2x 像素
-node scripts/export.mjs output.html --pdf a.pdf --png a.png --color 3 --font 0   # 指定配色/字体（序号或名称）
+node scripts/export.mjs output.html --pdf a.pdf --png a.png --color forest-ink --font 0   # 指定配色/字体（主题 id、序号或名称）
 ```
 
 脚本会先把懒加载图片改为立即加载并滚动全页、等待所有图片与 `document.fonts.ready`，长图隐藏设置按钮和目录。导出后检查：图片无缺失（脚本会打印失败的图片）、PDF 页数合理、无大片空白页。交付时附上导出文件。
+
+- 长图有高度上限：页面高度 × 倍率超过约 16000 像素时，脚本会自动降低倍率并提示；页面特别长时建议只给 PDF
+- PDF 按页面的主题纸色整页铺底（深色主题也是深色），页边距在内容里
+- `--embed` 只内置字体；本地图片仍是 HTML 旁边的文件，交付 HTML 时要连同图片文件夹一起给
+- 读者打开页面后可以直接点文字修改（标题、段落、表格单元格都可编辑），改完用浏览器打印或再导出
 
 ## 组件参考
 
@@ -177,7 +193,7 @@ node scripts/export.mjs output.html --pdf a.pdf --png a.png --color 3 --font 0  
 - **图片**（`![alt](url)`）→ `<figure>` + `<img>` + 可选 caption
 - **blockquote**（`> text`）→ 带样式的引用块
 - **有序/无序列表**（`1.` / `-`）→ 标准列表
-- **脚注区**（`## Footnote` / `## 脚注`）→ 自动缩小字体和间距
+- **脚注**：正文写 `[^1]`，任意位置写 `[^1]: 说明`，渲染成上标编号和文末列表（有 `## 脚注` / `## Footnotes` 节就放进去，没有就新建一节）；脚注节自动缩小字体和间距
 
 ## Gotchas
 
@@ -185,7 +201,7 @@ node scripts/export.mjs output.html --pdf a.pdf --png a.png --color 3 --font 0  
 2. **不要过度添加分割线**。瑞士风是卡片语言——用背景色/间距分隔，不用线条。section 之间零线。
 3. **单语文档不要设 `meta.lang`**。lang 用于双语文档的语言过滤，全英文/全中文文档设为 `null`，否则会跳过所有非目标语言段落。
 4. **highlight 的 line 必须精确对应加粗行**。如果偏了一行，原文段落会同时出现升格组件和原始段落。
-5. **embed 的 SVG 必须纯内联**，不能引用外部文件。viewBox 宽度建议 600-720。
+5. **embed 的 SVG 必须纯内联**，不能引用外部文件。viewBox 宽度建议 600-720。颜色不要写死：线条和文字用 `currentColor`（跟正文色走），强调用 `style="fill:var(--accent)"` / `stroke:var(--accent)`，浅色底块用 `var(--paper-2)`，线用 `var(--line)`，这样切主题（含深色午夜墨）时图也跟着变。手机上图会保持可读的最小宽度并横向滚动
 6. **hero_image 只能用照片/视频帧**（现场照、视频截图、建筑/几何摄影），**绝不用表格、图表、榜单、文字截图**做头图。不确定时写 `"hero_image": "auto"` 或省略：渲染器会从正文图片里挑第一张文件名/图注不像图表的照片（优先“视频截图/照片/全景”），并自动拒绝文件名或图注含 chart/table/bench/index/图表/表格/评测/基准/指数 的候选。
 7. **annotations.json 写完后先数行号**。常见错误是行号算错导致标注打在空行或错误段落上。
 8. **大编号和标题必须在同一行**（Swiss 模式）。渲染器已处理，但如果手写 HTML 要注意用 flex baseline 而不是分两行。

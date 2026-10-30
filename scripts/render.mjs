@@ -7,27 +7,47 @@
  * where standard prose is "upgraded" to richer visual components.
  *
  * Usage: node render.mjs <input.md> <annotations.json> <output.html> [--style swiss|magazine]
+ *          [--theme <主题 id>] [--brand <#hex>] [--embed]
+ *
+ *   --theme  初始配色（themes.json 里的 id），也可写在 meta.theme；默认是该风格的默认主题
+ *   --brand  用户的品牌色，也可写在 meta.brand；经 gz-theme.mjs 收进风格允许的范围后作为初始配色
+ *   --embed  把页面用到的字体子集化内置进 HTML（离线可看、导出稳定）；默认用在线字体链接
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { resolve, dirname } from 'path';
+import { embedFonts, fontLinkTag } from './gz-fonts.mjs';
 
 const args = process.argv.slice(2);
-const styleIdx = args.indexOf('--style');
-let styleName = 'magazine';
-if (styleIdx !== -1) {
-  styleName = args[styleIdx + 1] || 'magazine';
-  args.splice(styleIdx, 2);
+function takeFlag(name, withValue = true) {
+  const i = args.indexOf(name);
+  if (i === -1) return null;
+  const v = withValue ? args[i + 1] : true;
+  args.splice(i, withValue ? 2 : 1);
+  return v;
 }
+const styleName = takeFlag('--style') || 'magazine';
+const themeArg = takeFlag('--theme');
+const brandArg = takeFlag('--brand');
+const embed = takeFlag('--embed', false);
 const [mdPath, annoPath, outPath] = args;
 if (!mdPath || !annoPath || !outPath) {
-  console.error('Usage: node render.mjs <input.md> <annotations.json> <output.html> [--style swiss|magazine]');
+  console.error('Usage: node render.mjs <input.md> <annotations.json> <output.html> [--style swiss|magazine] [--theme id] [--brand #hex] [--embed]');
   process.exit(1);
 }
 
 const mdRaw = readFileSync(resolve(mdPath), 'utf-8');
 const anno = JSON.parse(readFileSync(resolve(annoPath), 'utf-8'));
+
+// Document language for :lang(zh) rules and labels: meta.lang wins, else detect by Han ratio.
+const hanCount = (mdRaw.match(/[\u3400-\u9fff]/g) || []).length;
+const latinCount = (mdRaw.match(/[A-Za-z]/g) || []).length;
+const docLang = anno.meta.lang === 'en' ? 'en'
+  : anno.meta.lang === 'zh' ? 'zh-CN'
+  : (hanCount > latinCount * 0.25 ? 'zh-CN' : 'en');
+const TERM_LABEL = docLang === 'en' ? 'Term' : '术语';
 
 // ── Parse markdown into lines, extract YAML frontmatter ──
 let lines = mdRaw.split('\n');
@@ -47,6 +67,8 @@ const originalLines = mdRaw.split('\n');
 
 // ── Build upgrade lookup: line number → upgrade instruction ──
 const upgradeMap = new Map(); // lineNum → upgrade object
+const INSERT_TYPES = new Set(['embed', 'figure', 'aside', 'summary-card']);
+const insertMap = new Map();  // lineNum → explain-mode components to insert before that line
 const dropLines = new Set();
 const defCardLines = new Set();
 const galleryRange = new Set();
@@ -74,14 +96,49 @@ for (const u of anno.upgrades) {
   } else if (u.type === 'checklist') {
     upgradeMap.set(u.lines[0], u);
     for (const ln of u.lines) checklistRange.add(ln);
-  } else if (u.type === 'embed' || u.type === 'figure' || u.type === 'aside' || u.type === 'summary-card') {
-    upgradeMap.set(u.line, u);
+  } else if (INSERT_TYPES.has(u.type)) {
+    // Explain-mode components are inserted before their line; the source line itself still renders
+    if (!insertMap.has(u.line)) insertMap.set(u.line, []);
+    insertMap.get(u.line).push(u);
   }
+}
+
+// ── Markdown footnotes: [^id] in text, [^id]: definition anywhere ──
+const footnotes = new Map(); // id → { n, text }
+for (const l of originalLines) {
+  const m = l.trim().match(/^\[\^([^\]]+)\]:\s*(.*)$/);
+  if (m && !footnotes.has(m[1])) footnotes.set(m[1], { n: footnotes.size + 1, text: m[2] });
+}
+const fnId = (id) => String(id).replace(/[^\w-]/g, '_');
+
+// ── Annotation check: a wrong line number silently drops the upgrade or duplicates text ──
+{
+  const EXPECT = {
+    pullquote: [/^\*\*/, '独立加粗句（**…**）'], highlight: [/^\*\*/, '独立加粗句（**…**）'],
+    'def-card': [/^>\s*\*\*/, '引用里的术语行（> **术语**：…）'], checklist: [/^[-*]\s/, '无序列表项（- …）'],
+    process: [/^\d+[.、)]\s*/, '有序列表项（1. …）'], gallery: [/\S/, '非空行'],
+  };
+  const problems = [];
+  for (const u of anno.upgrades) {
+    for (const ln of u.lines || [u.line]) {
+      const text = (originalLines[ln - 1] ?? '').trim();
+      if (!Number.isInteger(ln) || ln < 1 || ln > originalLines.length) problems.push(`${u.type} 行 ${ln}：超出文件范围（共 ${originalLines.length} 行）`);
+      else if (!text && !INSERT_TYPES.has(u.type)) problems.push(`${u.type} 行 ${ln}：是空行，这条标注不会生效`);
+      else if (EXPECT[u.type] && !EXPECT[u.type][0].test(text)) problems.push(`${u.type} 行 ${ln}：应该是${EXPECT[u.type][1]}，实际是「${text.slice(0, 30)}」`);
+    }
+  }
+  const counts = anno.upgrades.reduce((m, u) => (m[u.type] = (m[u.type] || 0) + 1, m), {});
+  console.log(`标注：${Object.entries(counts).map(([k, v]) => `${k} ×${v}`).join('，') || '无'}`);
+  if (problems.length) console.warn(`⚠ 标注行号可能不对：\n  ${problems.join('\n  ')}`);
 }
 
 // ── Inline markdown helpers ──
 // ── Bare URL → link. Scheme / www. / domain+path, or bare domain with a common TLD. ──
 const URL_RE = /((?:https?:\/\/|www\.)[^\s<>"'，。；、）」』]+|(?<![\w@./-])(?:[a-z0-9-]+\.)+(?:com|org|net|dev|io|ai|se|wiki|app|co|cn|me|gg|xyz|so|sh|tv)(?:\/[^\s<>"'，。；、）」』]*)?)/i;
+const EMAIL_RE = /([A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})/;
+function mailLink(addr) {
+  return `<a class="url" href="mailto:${addr}">${addr}</a>`;
+}
 function autoLink(raw) {
   if (/…|\.\.\.|[<>{}]/.test(raw)) return raw; // placeholder / templated string, not a real address
   let url = raw, tail = '';
@@ -111,16 +168,21 @@ function inlineMd(text) {
   // bare URLs become real <a> with shortened display text (domain/path…) — see autoLink().
   text = text.split(/(`[^`]+`)/).map((seg, k) => k % 2 ? seg
     : seg.split(/(\[[^\]]+\]\([^)]+\))/).map((s2, j) => j % 2 ? s2
-      : s2.split(URL_RE).map((s3, i) => i % 2 ? autoLink(s3) : glyphs(s3)).join('')).join('')).join('');
+      : s2.split(EMAIL_RE).map((s4, q) => q % 2 ? mailLink(s4)
+        : s4.split(URL_RE).map((s3, i) => i % 2 ? autoLink(s3) : glyphs(s3)).join('')).join('')).join('')).join('');
   // Bold
   text = text.replace(/\*\*\[([^\]]+)\]\(([^)]+)\)\*\*/g, '<strong><a href="$2">$1</a></strong>');
   text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   // Italic
-  text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  // Latin-only emphasis is marked lang="en": it stays italic in zh docs instead of getting CJK emphasis dots
+  text = text.replace(/\*([^*]+)\*/g, (_, t) => /[\u3400-\u9fff]/.test(t) ? `<em>${t}</em>` : `<em lang="en">${t}</em>`);
   // Links
   text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
   // Inline code
   text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // Footnote references
+  text = text.replace(/\[\^([^\]]+)\]/g, (all, id) => footnotes.has(id)
+    ? `<sup class="fn-ref"><a href="#fn-${fnId(id)}" id="fnref-${fnId(id)}">${footnotes.get(id).n}</a></sup>` : all);
   return text;
 }
 
@@ -214,6 +276,35 @@ function renderChart(lines) {
   return `<figure class="hchart${series ? ' hchart-grouped' : ''}">${meta.title ? `<div class="hc-title">${inlineMd(meta.title)}</div>` : ''}<div class="hc-body">${body}</div>${meta.source || meta.note ? `<figcaption class="hc-cap">${meta.note ? inlineMd(meta.note) + ' ' : ''}${meta.source ? '来源：' + inlineMd(meta.source) : ''}</figcaption>` : ''}</figure>`;
 }
 
+function renderInsert(upgrade) {
+  // Embed card — AI-generated SVG/UI preview
+  if (upgrade.type === 'embed') {
+    return (`<div class="embed-card"><div class="embed-label">${escHtml(upgrade.label || 'Preview')}</div><div class="embed-body">${upgrade.svg || upgrade.html || ''}</div>${upgrade.caption ? `<div class="embed-caption">${escHtml(upgrade.caption)}</div>` : ''}</div>`);
+  }
+
+  // Figure — Unsplash/external image with caption
+  if (upgrade.type === 'figure') {
+    return (`<figure class="figure-card"><img src="${upgrade.src}" alt="${escHtml(upgrade.alt || '')}" />${upgrade.caption ? `<figcaption>${capHtml(escHtml(upgrade.caption))}</figcaption>` : ''}</figure>`);
+  }
+
+  // Aside — side note / annotation that adds context
+  if (upgrade.type === 'aside') {
+    return (`<div class="aside-card"><div class="aside-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div><div class="aside-content"><div class="aside-title">${escHtml(upgrade.title || '补充')}</div><p>${inlineMd(upgrade.text)}</p></div></div>`);
+  }
+
+  // Summary card — key takeaway grid
+  if (upgrade.type === 'summary-card') {
+    let html = '<div class="summary-card"><div class="summary-label">' + escHtml(upgrade.label || 'Key Takeaways') + '</div><div class="summary-grid">';
+    for (const item of (upgrade.items || [])) {
+      html += `<div class="summary-item"><div class="summary-item-title">${escHtml(item.title)}</div><div class="summary-item-desc">${escHtml(item.desc)}</div></div>`;
+    }
+    html += '</div></div>';
+    return html;
+  }
+
+  return '';
+}
+
 // ── Main render loop ──
 const sections = [];
 let currentSection = null;
@@ -244,6 +335,8 @@ function addBlock(html) {
 for (let i = 0; i < originalLines.length; i++) {
   const lineNum = i + 1; // 1-based
   if (lineNum <= fmEnd) continue;
+  // Explain-mode components go in before this line, even when the line is blank or consumed by a block above
+  for (const u of insertMap.get(lineNum) || []) addBlock(renderInsert(u));
   if (lineNum < skipUntil) continue;
 
   const raw = originalLines[i];
@@ -254,6 +347,14 @@ for (let i = 0; i < originalLines.length; i++) {
 
   // Skip empty lines
   if (trimmed === '') continue;
+
+  // HTML comments (single or multi-line) are notes for the author, never page text
+  if (trimmed.startsWith('<!--')) {
+    let j = i;
+    while (j < originalLines.length && !originalLines[j].includes('-->')) j++;
+    skipUntil = j + 2;
+    continue;
+  }
 
   // Language filtering: if meta.lang is set, skip lines that are the "other" language
   // Works for bilingual docs where EN/ZH alternate line by line
@@ -271,8 +372,8 @@ for (let i = 0; i < originalLines.length; i++) {
 
   // Skip HTML-only lines (sub/sup references, video tags, svg blocks)
   if (/^<(sub|sup|svg|\/svg)/.test(trimmed)) continue;
-  // Skip footnote definition lines
-  if (/^\[\^\d+\]:/.test(trimmed)) continue;
+  // Footnote definitions are collected up front and rendered as a list at the end
+  if (/^\[\^[^\]]+\]:/.test(trimmed)) continue;
 
   // Image lines — one image = figure; 2–3 adjacent images (same line or consecutive lines)
   // = side-by-side group; 4+ = horizontally scrollable strip. All use the breakout width.
@@ -285,7 +386,7 @@ for (let i = 0; i < originalLines.length; i++) {
       j++;
     }
     skipUntil = j + 1;
-    const radius = styleName === 'magazine' ? '3px' : '0';
+    const radius = '0';
     const cap = alt => alt && !alt.startsWith('img_') ? `<figcaption>${capHtml(inlineMd(escHtml(alt)))}</figcaption>` : '';
     const one = (im, cls = '') => `<figure class="figure-card${cls}"><img src="${escHtml(im.src)}" alt="${escHtml(im.alt)}" loading="lazy" style="border-radius:${radius}" />${cap(im.alt)}</figure>`;
     if (imgs.length === 1) addBlock(one(imgs[0]));
@@ -475,9 +576,9 @@ for (let i = 0; i < originalLines.length; i++) {
     const parsed = parseDefCard(trimmed);
     if (parsed) {
       if (styleName === 'swiss') {
-        addBlock(`<div class="def-card def-card-swiss"><div class="dc-term"><span class="dc-label">Term</span>${escHtml(parsed.term)}</div><div class="dc-body">${inlineMd(parsed.body)}</div></div>`);
+        addBlock(`<div class="def-card def-card-swiss"><div class="dc-term"><span class="dc-label">${TERM_LABEL}</span>${escHtml(parsed.term)}</div><div class="dc-body">${inlineMd(parsed.body)}</div></div>`);
       } else {
-        addBlock(`<div class="def-card"><div class="def-card-label">术语</div><div class="def-card-term">${escHtml(parsed.term)}</div><div class="def-card-body">${inlineMd(parsed.body)}</div></div>`);
+        addBlock(`<div class="def-card"><div class="def-card-label">${TERM_LABEL}</div><div class="def-card-term">${escHtml(parsed.term)}</div><div class="def-card-body">${inlineMd(parsed.body)}</div></div>`);
       }
       continue;
     }
@@ -512,7 +613,7 @@ for (let i = 0; i < originalLines.length; i++) {
     html += '</div>';
     addBlock(html);
     // Skip the original numbered list lines
-    for (const ln of anno.upgrades.find(u => u.type === 'process').lines) {
+    for (const ln of upgrade.lines) {
       dropLines.add(ln);
     }
     continue;
@@ -522,41 +623,12 @@ for (let i = 0; i < originalLines.length; i++) {
   if (upgrade && upgrade.type === 'checklist') {
     let html = '<ul class="checklist">';
     // Gather list items from original lines
-    for (const ln of anno.upgrades.find(u => u.type === 'checklist').lines) {
+    for (const ln of upgrade.lines) {
       const content = originalLines[ln - 1].trim().replace(/^[-*]\s*/, '');
       html += `<li>${inlineMd(content)}</li>`;
       if (ln !== lineNum) dropLines.add(ln);
     }
     html += '</ul>';
-    addBlock(html);
-    continue;
-  }
-
-  // Embed card — AI-generated SVG/UI preview
-  if (upgrade && upgrade.type === 'embed') {
-    addBlock(`<div class="embed-card"><div class="embed-label">${escHtml(upgrade.label || 'Preview')}</div><div class="embed-body">${upgrade.svg || upgrade.html || ''}</div>${upgrade.caption ? `<div class="embed-caption">${escHtml(upgrade.caption)}</div>` : ''}</div>`);
-    continue;
-  }
-
-  // Figure — Unsplash/external image with caption
-  if (upgrade && upgrade.type === 'figure') {
-    addBlock(`<figure class="figure-card"><img src="${upgrade.src}" alt="${escHtml(upgrade.alt || '')}" />${upgrade.caption ? `<figcaption>${capHtml(escHtml(upgrade.caption))}</figcaption>` : ''}</figure>`);
-    continue;
-  }
-
-  // Aside — side note / annotation that adds context
-  if (upgrade && upgrade.type === 'aside') {
-    addBlock(`<div class="aside-card"><div class="aside-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></div><div class="aside-content"><div class="aside-title">${escHtml(upgrade.title || '补充')}</div><p>${inlineMd(upgrade.text)}</p></div></div>`);
-    continue;
-  }
-
-  // Summary card — key takeaway grid
-  if (upgrade && upgrade.type === 'summary-card') {
-    let html = '<div class="summary-card"><div class="summary-label">' + escHtml(upgrade.label || 'Key Takeaways') + '</div><div class="summary-grid">';
-    for (const item of (upgrade.items || [])) {
-      html += `<div class="summary-item"><div class="summary-item-title">${escHtml(item.title)}</div><div class="summary-item-desc">${escHtml(item.desc)}</div></div>`;
-    }
-    html += '</div></div>';
     addBlock(html);
     continue;
   }
@@ -571,9 +643,9 @@ for (let i = 0; i < originalLines.length; i++) {
     const parsed = parseDefCard(trimmed);
     if (parsed) {
       if (styleName === 'swiss') {
-        addBlock(`<div class="def-card def-card-swiss"><div class="dc-term"><span class="dc-label">Term</span>${escHtml(parsed.term)}</div><div class="dc-body">${inlineMd(parsed.body)}</div></div>`);
+        addBlock(`<div class="def-card def-card-swiss"><div class="dc-term"><span class="dc-label">${TERM_LABEL}</span>${escHtml(parsed.term)}</div><div class="dc-body">${inlineMd(parsed.body)}</div></div>`);
       } else {
-        addBlock(`<div class="def-card"><div class="def-card-label">术语</div><div class="def-card-term">${escHtml(parsed.term)}</div><div class="def-card-body">${inlineMd(parsed.body)}</div></div>`);
+        addBlock(`<div class="def-card"><div class="def-card-label">${TERM_LABEL}</div><div class="def-card-term">${escHtml(parsed.term)}</div><div class="def-card-body">${inlineMd(parsed.body)}</div></div>`);
       }
       continue;
     }
@@ -632,6 +704,15 @@ for (let i = 0; i < originalLines.length; i++) {
 }
 
 flushSection();
+
+// Footnote list: into the document's own 脚注 / Footnotes section if it has one, else a new last section
+if (footnotes.size) {
+  const list = `<ol class="footnotes">${[...footnotes].map(([id, f]) =>
+    `<li id="fn-${fnId(id)}">${inlineMd(escHtml(f.text))} <a class="fn-back" href="#fnref-${fnId(id)}" aria-label="返回正文">↩</a></li>`).join('')}</ol>`;
+  const own = sections.find(sec => sec.title && /footnote|脚注|注释|注脚/i.test(sec.title));
+  if (own) own.blocks.push(list);
+  else sections.push({ num: String(++sectionCount).padStart(2, '0'), title: docLang === 'en' ? 'Footnotes' : '脚注', blocks: [list] });
+}
 
 // ── HTML escape helper ──
 function escHtml(s) {
@@ -755,17 +836,41 @@ bodyHtml += `
 const scriptDir = import.meta.dirname || dirname(fileURLToPath(import.meta.url));
 let assetsDir = resolve(scriptDir, '..', 'assets');
 if (!existsSync(assetsDir)) assetsDir = scriptDir;
-const cssFile = styleName === 'swiss' ? 'style-swiss.css' : 'style-magazine.css';
-const css = readFileSync(resolve(assetsDir, cssFile), 'utf-8');
+const family = styleName === 'swiss' ? 'swiss' : 'magazine';
 function readAsset(name) {
   const p = resolve(assetsDir, name);
   if (!existsSync(p)) { console.error(`✗ missing asset: ${p}`); process.exit(1); }
   return readFileSync(p, 'utf-8');
 }
+// 设计系统（主题、字号角色、间距、共享组件）在前，风格自己的版式在后，设置面板 ui.css 最后
+const gzCss = readAsset(`gz-${family}.css`);
+const css = readAsset(`style-${family}.css`);
 const uiCss = readAsset('ui.css');
 const uiJs = readAsset('ui.js');
 const themes = JSON.parse(readAsset('themes.json'));
-const theme = themes[styleName] || themes.swiss;
+const theme = themes[family];
+
+// 初始配色：品牌色 > 指定主题 > 默认主题。品牌色不直接用，经 gz-theme.mjs 约束成一套完整主题
+const brand = brandArg || meta.brand;
+let brandCss = '';
+let colors = theme.colors;
+let themeId = themeArg || meta.theme || theme.default;
+if (brand) {
+  try {
+    brandCss = execFileSync(process.execPath, [resolve(scriptDir, 'gz-theme.mjs'), 'brand', brand, '--family', family], { encoding: 'utf-8' }).trim();
+    const v = (k) => (brandCss.match(new RegExp(`${k}:(#[0-9a-f]{6})`, 'i')) || [])[1];
+    colors = [{ id: 'brand', name: '品牌色', en: 'Brand', scheme: 'light', paper: v('--paper'), ink: v('--ink'), accent: v('--accent') }, ...colors];
+    themeId = 'brand';
+    console.log(brandCss.split('\n')[0]);
+  } catch (e) {
+    console.warn(`品牌色 ${brand} 无法生成主题，改用预设：${(e.stderr || e.message).toString().trim()}`);
+  }
+}
+if (!colors.some(c => c.id === themeId)) {
+  console.warn(`没有主题 ${themeId}，改用默认主题 ${theme.default}`);
+  themeId = theme.default;
+}
+const themeScheme = colors.find(c => c.id === themeId).scheme;
 
 // Static UI markup (settings FAB only — export lives in scripts/export.mjs). Rendered into the HTML itself so the
 // controls exist even before/without JS; ui.js only wires up behaviour.
@@ -778,76 +883,17 @@ const uiMarkup = `
   <button class="hf-fab-btn" id="hf-settings-toggle" type="button" title="设置" aria-haspopup="true">${ICON.sliders}</button>
   <div class="hf-dropdown" id="hf-settings-dropdown">
     <div class="hf-dropdown-label">配色</div>
-    <div class="hf-swatches">${theme.colors.map((c, i) =>
-      `<button type="button" class="hf-swatch${i === 0 ? ' active' : ''}" data-accent="${c.accent}" data-accent-bright="${c.accentBright || ''}" data-accent-on="${c.accentOn || '#ffffff'}" data-vars="${attr(JSON.stringify(c.vars || {}))}" data-scheme="${c.scheme || 'light'}" style="background:${c.swatch || c.accent}" title="${attr(c.name)}" aria-label="${attr(c.name)}"></button>`).join('')}</div>
+    <div class="hf-swatches">${colors.map(c =>
+      `<button type="button" class="hf-swatch${c.id === themeId ? ' active' : ''}" data-theme-id="${c.id}" data-scheme="${c.scheme}" style="background:linear-gradient(135deg,${c.paper} 0 50%,${c.accent} 50% 100%)" title="${attr(`${c.name} ${c.en}`)}" aria-label="${attr(c.name)}"></button>`).join('')}</div>
     <div class="hf-dropdown-divider"></div>
     <div class="hf-dropdown-label">字体</div>
     <div class="hf-font-options">${theme.fonts.map((f, i) =>
-      `<button type="button" class="hf-font-option${i === 0 ? ' active' : ''}" data-var="${theme.fontVar}" data-family="${attr(f.family)}" data-google="${attr(f.google || '')}"><span class="font-preview" style="font-family:${attr(f.family)}">${styleName === 'magazine' ? '衬线 Aa' : '黑体 Aa'}</span><span class="font-name">${attr(f.name)}</span></button>`).join('')}</div>
+      `<button type="button" class="hf-font-option${i === 0 ? ' active' : ''}" data-vars="${theme.fontVars.join(' ')}" data-family="${attr(f.family)}" data-href="${attr(f.href || '')}"><span class="font-preview" style="font-family:${attr(f.family)}">${theme.preview}</span><span class="font-name">${attr(f.name)}</span></button>`).join('')}</div>
   </div>
 </div>`;
 
-const fontsHref = styleName === 'swiss'
-  ? 'https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=Noto+Sans+SC:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap'
-  : 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap';
-
-const chartScript = isSwiss ? `
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script>
-function initCharts() {
-  const accent = '${anno.meta.accent || '#002FA7'}';
-  const grey = '#d4d4d2';
-  const fg = '#0a0a0a';
-  const defaults = Chart.defaults;
-  defaults.font.family = "'Inter','Helvetica Neue',sans-serif";
-  defaults.font.size = 12;
-  defaults.color = '#737373';
-  defaults.plugins.legend.display = false;
-  defaults.animation.duration = 900;
-  defaults.animation.easing = 'easeOutQuart';
-  defaults.scale.grid = { color: '#f0f0ee', lineWidth: 1 };
-  defaults.scale.border = { display: false };
-
-  const barEl = document.getElementById('chart-bar');
-  if (barEl) new Chart(barEl, {
-    type: 'bar',
-    data: {
-      labels: ['设计类','写作类','开发类','视频类','行业类','硬件类'],
-      datasets: [{
-        data: [2400, 1800, 3100, 900, 1500, 600],
-        backgroundColor: [accent, grey, accent, grey, accent, grey],
-        borderRadius: 0, maxBarThickness: 48
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: { y: { beginAtZero: true, ticks: { stepSize: 1000 } }, x: { grid: { display: false } } }
-    }
-  });
-
-  const lineEl = document.getElementById('chart-line');
-  if (lineEl) new Chart(lineEl, {
-    type: 'line',
-    data: {
-      labels: ['1月','2月','3月','4月','5月','6月'],
-      datasets: [{
-        data: [82, 85, 88, 91, 93, 94],
-        borderColor: accent, borderWidth: 2,
-        pointBackgroundColor: accent, pointRadius: 4, pointHoverRadius: 6,
-        fill: true,
-        backgroundColor: accent + '12',
-        tension: 0.3
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: { y: { min: 75, max: 100, ticks: { callback: v => v+'%' } }, x: { grid: { display: false } } }
-    }
-  });
-}
-if (typeof Chart !== 'undefined') initCharts();
-else document.querySelector('script[src*="chart.js"]').onload = initCharts;
-</script>` : '';
+// 字体：在线链接（带 data-gz-fonts，--embed 时按页面用字子集化内置）
+const fontsTag = await fontLinkTag(theme.fontIds);
 
 // Build TOC HTML
 const tocHtml = tocItems.map(t =>
@@ -906,12 +952,7 @@ const tocScript = `
 </script>`;
 
 // ── CJK typography pass (references/design-rules.md §中文排版) ──
-// 1) Document language for :lang(zh) rules: meta.lang wins, else detect by Han ratio.
-const hanCount = (mdRaw.match(/[\u3400-\u9fff]/g) || []).length;
-const latinCount = (mdRaw.match(/[A-Za-z]/g) || []).length;
-const docLang = anno.meta.lang === 'en' ? 'en'
-  : anno.meta.lang === 'zh' ? 'zh-CN'
-  : (hanCount > latinCount * 0.25 ? 'zh-CN' : 'en');
+// 1) Document language: see docLang at the top.
 // 2) Han ↔ Latin/digit spacing ("盘古之白"). clreq §6.3.3: ≤ 1/4 em between Han and
 //    Western letters/numerals, none at line start/end. Chrome has no text-autospace yet,
 //    so insert a real (collapsible) space wrapped in .hf-sp where the author left none;
@@ -940,28 +981,40 @@ function autospace(html) {
 if (docLang.startsWith('zh') && anno.meta.autospace !== false) bodyHtml = autospace(bodyHtml);
 
 const fullHtml = `<!DOCTYPE html>
-<html lang="${docLang}" data-hf-style="${styleName}">
+<html lang="${docLang}" data-hf-style="${styleName}" data-family="${family}" data-medium="page" data-theme="${themeId}" data-scheme="${themeScheme}" style="color-scheme:${themeScheme}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escHtml(meta.title)}</title>
+<style>${gzCss}</style>${brandCss ? `\n<style data-gz-brand>${brandCss}</style>` : ''}
 <style>${css}</style>
 <style>${uiCss}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="${fontsHref}" rel="stylesheet">
+${fontsTag}
 </head>
 <body>
 ${tocSidebar}
 <div class="container">
 ${bodyHtml}
 </div>
-${chartScript}
 ${tocScript}
 ${uiMarkup}
 <script>${uiJs}</script>
 </body>
 </html>`;
 
-writeFileSync(resolve(outPath), fullHtml, 'utf-8');
+let outHtml = fullHtml;
+if (embed) {
+  try {
+    const r = await embedFonts(fullHtml, { log: (m) => console.log('  ' + m) });
+    outHtml = r.html;
+    if (r.report.length) console.log(`字体内置：${[...new Set(r.report.map((f) => f.id))].join('、')}，合计 ${(r.report.reduce((n, f) => n + f.bytes, 0) / 1024).toFixed(0)}KB`);
+  } catch (e) {
+    console.warn(e.code === 'ERR_MODULE_NOT_FOUND'
+      ? '字体内置需要先在 skill 目录运行一次 npm install；这次保留在线字体'
+      : `字体内置失败，保留在线字体：${e.message}`);
+  }
+}
+writeFileSync(resolve(outPath), outHtml, 'utf-8');
 console.log(`✓ Rendered ${sections.length} sections → ${outPath}`);

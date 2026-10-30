@@ -1,0 +1,14 @@
+{
+  "name": "guizang-page-skill",
+  "private": true,
+  "type": "module",
+  "description": "渲染不需要依赖；内置字体（render.mjs --embed）需要 subset-font，导出 PDF / 长图（export.mjs）需要 puppeteer-core",
+  "scripts": {
+    "render": "node scripts/render.mjs",
+    "export": "node scripts/export.mjs"
+  },
+  "dependencies": {
+    "puppeteer-core": "^24.0.0",
+    "subset-font": "^2.9.0"
+  }
+}
