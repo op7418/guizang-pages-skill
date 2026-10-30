@@ -1,8 +1,12 @@
   /* ========================================
-     DESIGN TOKENS
-     Constrained palette: near-black, near-white,
-     one accent. Inspired by Dia's "print it out,
-     put it on your desk" philosophy.
+     MAGAZINE — literary / editorial layout
+     One centred reading axis, serif body, ornament section numbers,
+     centred pull quotes, book-style three-line tables.
+     ui.css is inlined after this file.
+     ======================================== */
+
+  /* ========================================
+     TOKENS
      ======================================== */
   :root {
     --fg: #1a1a1a;
@@ -14,15 +18,20 @@
     --bg-highlight: #1a1a1a;
     --fg-highlight: #f6f4f0;
     --accent: #c45a3c;
+    --accent-ink: var(--accent);
     --border: #d4d0c8;
     --border-light: #e2dfd8;
+    --hc-mute: #b9b6ae;
     --font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Source Han Serif CN', 'Songti SC', 'STSong', Georgia, serif;
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', 'Source Han Sans SC', sans-serif;
     --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    --font-kai: "LXGW WenKai", "Kaiti SC", "STKaiti", "KaiTi", "BiauKai", "FangSong", "STFangsong", var(--font-serif, serif);
     --measure: 1200px;
     --gutter: 20px;
     --columns: 12;
     --margin: 80px;
+    --col: calc(30 * 1.0625rem);   /* reading column: 30 CJK characters at 17px */
+    --wide: 920px;                 /* breakout width for media and emphasis blocks */
     --space-xs: 4px;
     --space-sm: 8px;
     --space-md: 16px;
@@ -30,7 +39,21 @@
     --space-xl: 48px;
     --space-2xl: 72px;
     --space-3xl: 96px;
+    /* CJK body text — see references/design-rules.md §中文排版 */
+    --text-size: 1.0625rem;
+    --text-leading: 1.85;
+    --text-measure: 36em;
+    --para-gap: 1em;
   }
+
+  /* Dark "Charcoal" swatch: ui.js sets data-scheme="dark" plus inline colour vars */
+  :root[data-scheme="dark"] {
+    --hc-mute: #55555b;
+    --tbl-line: rgba(255,255,255,0.1);
+    --tbl-zebra: rgba(255,255,255,0.03);
+    --quote-tint: rgba(255,255,255,0.04);
+  }
+  :root[data-scheme="dark"] img { opacity: 0.94; }
 
   /* ========================================
      RESET & BASE
@@ -52,286 +75,186 @@
     letter-spacing: 0.01em; /* Latin only; :lang(zh) resets to 0 */
   }
 
+  :lang(zh) body {
+    letter-spacing: 0;              /* 汉字默认密排，不额外加字距 */
+    line-break: strict;             /* 避头尾：句读、闭括号等不出现在行首 */
+    word-break: normal;
+    overflow-wrap: break-word;      /* 长 URL / 长英文词允许断开，避免撑破版心 */
+    text-spacing-trim: normal;      /* 相邻标点挤压（Chrome 123+，需字体带 chws/halt） */
+    hanging-punctuation: allow-end; /* 行尾点号悬挂（目前仅 Safari） */
+    font-kerning: normal;
+  }
+
   ::selection {
     background: var(--accent);
     color: var(--fg-highlight);
   }
 
   /* ========================================
-     LAYOUT — 12-column grid
+     LAYOUT — one centred column
+     Every block in .section / .hero spans the full 12-col grid and is
+     centred at --col; media and emphasis blocks break out to --wide.
      ======================================== */
   .container {
     max-width: var(--measure);
     margin: 0 auto;
     padding: 0 var(--margin);
-    /* Inner content area: 1200 - 80*2 = 1040px, 12 cols + 11 gutters */
   }
 
-  /* Default prose spans col 3–10 (8 of 12 columns, centered) */
   .section,
   .hero,
-  footer,
+  .container > footer,
   .divider-dot {
     display: grid;
     grid-template-columns: repeat(var(--columns), 1fr);
     column-gap: var(--gutter);
   }
 
-  /* Prose content: 10 columns (col 2-11) */
   .section > *,
   .hero > * {
-    grid-column: 2 / 12;
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: 100%;
+    max-width: var(--col);
   }
 
-  /* Wide components: 12 columns full bleed within container */
-  .section > .highlight-card,
-  .section > .gallery-hint,
-  .section > .gallery,
-  .section > .gallery-grid,
-  .section > .pullquote,
-  .section > .big-number-row,
-  .section > .data-figure,
-  .section > .embed-card,
   .section > .figure-card,
-  .section > .summary-card,
-  .section > .chart-row {
-    grid-column: 1 / -1;
-  }
-
-  /* Medium-wide: same as prose (col 2-12) — already inherited */
-
-  /* Standalone pullquote (outside section) */
-  .container > .pullquote {
-    display: grid;
-    grid-template-columns: repeat(var(--columns), 1fr);
-    column-gap: var(--gutter);
-  }
-
-  .container > .pullquote > p {
-    grid-column: 2 / 12;
-  }
-
-  /* Footer & divider are single-content, center them */
-  footer > *,
-  .divider-dot {
-    grid-column: 1 / -1;
+  .section > .img-row,
+  .section > .img-strip-wrap,
+  .section > .gallery,
+  .section > .gallery-hint,
+  .section > .pullquote,
+  .section > .highlight-card,
+  .section > .table-wrap,
+  .section > .embed-card,
+  .section > .hchart {
+    max-width: var(--wide);
   }
 
   /* ========================================
-     DOC CHROME — magazine-style document header
+     MASTHEAD — one line: tags · author · date · reading time
      ======================================== */
-  .doc-chrome {
-    padding: var(--space-xl) 0 0;
-    display: grid;
-    grid-template-columns: repeat(var(--columns), 1fr);
-    column-gap: var(--gutter);
-  }
-
-  .doc-chrome-bar {
-    grid-column: 1 / -1;
+  .doc-chrome.doc-line {
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--fg-tertiary);
-    padding-bottom: var(--space-md);
-  }
-
-  .doc-chrome-bar .chrome-l,
-  .doc-chrome-bar .chrome-r {
-    display: flex;
-    gap: 1.6em;
-    align-items: center;
-  }
-
-  .doc-chrome-bar .chrome-sep {
-    width: 28px;
-    height: 1px;
-    background: currentColor;
-    opacity: 0.35;
-  }
-
-  .doc-chrome-bar .chrome-accent {
-    color: var(--accent-ink, var(--accent));
-    font-weight: 600;
-  }
-
-  .doc-chrome-rule {
-    grid-column: 1 / -1;
-    height: 2px;
-    background: var(--fg);
-    margin-bottom: var(--space-md);
-  }
-
-  .doc-chrome-meta {
-    grid-column: 1 / -1;
-    display: flex;
-    gap: 2em;
-    align-items: baseline;
     flex-wrap: wrap;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--fg-tertiary);
-    padding-bottom: var(--space-lg);
-    border-bottom: 1px solid var(--border-light);
-  }
-
-  .doc-chrome-meta .cm-item {
-    display: flex;
+    justify-content: center;
     align-items: baseline;
-    gap: 0.5em;
+    gap: 0;
+    max-width: min(var(--wide, 920px), 100%);
+    margin: 0 auto;
+    padding: 28px 0 12px !important; /* beats ui.css print `.doc-chrome` padding */
+    border-bottom: 1px solid var(--line, rgba(0,0,0,.16));
+    font-family: var(--font-serif);
+    font-size: 13px;
+    letter-spacing: .04em;
+    color: var(--fg-secondary, var(--fg));
+    text-align: center;
+    white-space: normal;
   }
-
-  .doc-chrome-meta .cm-key {
-    opacity: 0.5;
-  }
-
-  .doc-chrome-meta .cm-val {
-    color: var(--fg-secondary);
-    font-weight: 500;
-  }
-
-  .doc-chrome-meta .cm-dot {
-    width: 2px;
-    height: 2px;
-    background: var(--fg-tertiary);
-    border-radius: 50%;
-    opacity: 0.4;
-    flex-shrink: 0;
-    align-self: center;
-  }
-
-  .doc-chrome-tags {
-    grid-column: 1 / -1;
-    display: flex;
-    gap: var(--space-sm);
-    flex-wrap: wrap;
-    padding: var(--space-md) 0 var(--space-lg);
-  }
-
-  .doc-chrome-tags .chrome-tag {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    padding: 4px 12px;
-    border: 1px solid var(--border);
-    color: var(--fg-tertiary);
-  }
+  .doc-line > span { white-space: nowrap; }
+  .doc-line .dl-sep { margin: 0 .7em; opacity: .5; }
+  .doc-line .dl-tag { color: var(--accent-ink, var(--accent)); }
 
   /* ========================================
-     HERO / HEADER
+     HERO
      ======================================== */
   .hero {
-    padding: var(--space-3xl) 0 var(--space-2xl);
+    padding: 72px 0 40px;
     border-bottom: 1px solid var(--border);
+    text-align: center;
   }
 
-  .hero-meta {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--fg-tertiary);
-    margin-bottom: var(--space-lg);
-    display: flex;
-    gap: var(--space-md);
-    align-items: center;
-  }
-
-  .hero-meta .dot {
-    width: 3px;
-    height: 3px;
-    background: var(--fg-tertiary);
-    border-radius: 50%;
-    display: inline-block;
+  .hero::after {
+    content: "❦";
+    grid-column: 1 / -1;
+    justify-self: center;
+    margin-top: 34px;
+    color: var(--accent-ink, var(--accent));
+    font-size: 1.4rem;
   }
 
   .hero h1 {
     font-family: var(--font-serif);
-    font-size: 2.8rem;
-    font-weight: 700;
-    line-height: 1.25;
-    letter-spacing: -0.02em;
+    font-size: 2.7rem;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.03em; /* zh too: headings are deliberately tracked out */
     margin-bottom: var(--space-lg);
-    grid-column: 2 / 10;
   }
 
   .hero-subtitle {
     font-size: 1.05rem;
     color: var(--fg-secondary);
     line-height: 1.7;
-    grid-column: 2 / 10;
-  }
-
-  /* Tag row under title */
-  .hero-tags {
-    display: flex;
-    gap: var(--space-sm);
-    margin-top: var(--space-lg);
-    flex-wrap: wrap;
-  }
-
-  .hero-tags span {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 3px 10px;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    color: var(--fg-tertiary);
+    margin: 18px auto 0;
   }
 
   /* ========================================
-     SECTION
+     SECTION + SECTION HEADER
+     Header = centred "✦✦✦ 04 ✦✦✦" ornament number + title.
      ======================================== */
   .section {
-    padding: var(--space-lg) 0;
-    border-bottom: 1px solid var(--border-light);
-  }
-
-  .section:last-child {
-    border-bottom: none;
+    padding: 72px 0 var(--space-lg);
   }
 
   .section-number {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    color: var(--fg-tertiary);
-    text-transform: uppercase;
-    margin-bottom: var(--space-sm);
-    grid-column: 1 / 3;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    width: 100%;
     padding-top: 6px;
-  }
-
-  h2 {
+    margin-bottom: 18px;
     font-family: var(--font-serif);
-    font-size: 1.6rem;
-    font-weight: 600;
-    line-height: 1.3;
-    letter-spacing: -0.01em;
-    margin-bottom: var(--space-lg);
-    grid-column: 2 / 12;
+    font-size: .9rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-ink, var(--accent));
+  }
+  .sn-sym .sn-side { flex: 1 1 0; display: inline-flex; align-items: center; gap: 6px; }
+  .sn-sym .sn-l { justify-content: flex-end; }
+  .sn-sym .sn-r { justify-content: flex-start; }
+  .sn-sym .sn-num {
+    flex: none;
+    margin: 0 14px;
+    padding-left: .12em; /* cancels the trailing letter-spacing: optical centring */
+    font-size: 1.05rem;
+    letter-spacing: .12em;
+    line-height: 1;
+  }
+  .sn-sym .sn-star { display: inline-block; line-height: 1; }
+  .sn-star.s1 { font-size: 0.95rem; opacity: 0.9; }
+  .sn-star.s2 { font-size: 0.72rem; opacity: 0.65; }
+  .sn-star.s3 { font-size: 0.52rem; opacity: 0.42; }
+
+  .section > h2 {
+    font-family: var(--font-serif);
+    font-size: 1.85rem;
+    font-weight: 500;
+    line-height: 1.4;
+    letter-spacing: 0.03em;
+    text-align: center;
+    margin-bottom: 34px;
   }
 
-  h3 {
-    font-family: var(--font-sans);
+  .section > h3 {
+    font-family: var(--font-serif);
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.4;
+    letter-spacing: 0.02em;
+    text-align: center;
     margin-top: var(--space-xl);
     margin-bottom: var(--space-md);
-    letter-spacing: 0.01em;
   }
+
+  /* ui.js makes headings contenteditable, whose UA style resets line-break; restore 避头尾 */
+  :lang(zh) h1, :lang(zh) h2, :lang(zh) h3 { line-break: strict; }
+
+  /* Thematic breaks (---) are never drawn: the section rhythm already separates */
+  .divider { display: none; }
 
   /* ========================================
      PROSE
@@ -342,6 +265,45 @@
     line-height: 1.85;
   }
 
+  .section p,
+  .section li {
+    font-family: var(--font-serif);
+    overflow-wrap: break-word;
+  }
+
+  .section > p,
+  .section li {
+    font-size: 1.08rem;
+    line-height: 1.85;
+    text-align: justify;
+  }
+
+  :lang(zh) .section > p,
+  :lang(zh) .section li {
+    font-size: var(--text-size);
+    line-height: var(--text-leading);
+    font-weight: 400;
+  }
+  :lang(zh) .section > p {
+    margin-bottom: var(--para-gap);
+    text-align: justify;            /* clreq §6.2：中文正文原则上两端对齐 */
+    text-justify: inter-character;
+  }
+  :lang(zh) .section li {
+    margin-bottom: 0.35em;
+    text-align: start;
+  }
+
+  /* Links / URLs / code / reference lists: start-aligned, so justify doesn't stretch the line */
+  .section > p:has(a.url, a[href^="http"], code),
+  .section.refs p,
+  .section.refs li {
+    text-align: start;
+    text-justify: auto;
+  }
+  /* English paragraphs stay justified but hyphenate to avoid rivers */
+  .section > p:lang(en) { hyphens: auto; -webkit-hyphens: auto; }
+
   strong {
     font-weight: 600;
     color: var(--fg);
@@ -350,80 +312,175 @@
   a {
     color: var(--fg);
     text-decoration: underline;
-    text-decoration-color: var(--border);
+    text-decoration-color: var(--accent);
     text-underline-offset: 3px;
     transition: text-decoration-color 0.2s;
   }
+  .section a.url { overflow-wrap: anywhere; word-break: break-word; }
 
-  a:hover {
-    text-decoration-color: var(--accent);
+  /* 汉字没有真正的斜体：*强调* 用着重号（clreq §5.3.1：横排置于字下）；斜体只给拉丁文 */
+  :lang(zh) em {
+    font-style: normal;
+    -webkit-text-emphasis: filled dot; text-emphasis: filled dot;
+    -webkit-text-emphasis-position: under right; text-emphasis-position: under right;
+  }
+  :lang(zh) em:lang(en), :lang(zh) code em { text-emphasis: none; -webkit-text-emphasis: none; }
+  blockquote *, .pullquote * { font-style: normal; }
+  :lang(en) em, em:lang(en), i:lang(en) { font-style: italic; }
+
+  /* 破折号：两字线不断开；——插入语—— 轻度强调 */
+  .dash { white-space: nowrap; letter-spacing: 0; }
+  .dash-em { color: var(--fg); font-weight: 600; }
+
+  /* 中西文间距：render.mjs 插入 .hf-sp；支持 text-autospace 的浏览器用原生间距 */
+  .hf-sp { white-space: normal; }
+  @supports (text-autospace: normal) {
+    :lang(zh) body { text-autospace: normal; }
+    .hf-sp { display: none; }
   }
 
   /* ========================================
-     BLOCKQUOTE — Definition / Term card
+     LISTS
+     ======================================== */
+  ul, ol {
+    margin: var(--space-md) 0 var(--space-lg);
+    padding-left: var(--space-lg);
+  }
+
+  li { margin-bottom: var(--space-sm); }
+
+  li::marker { color: var(--accent-ink, var(--accent)); }
+
+  /* Footnote section (英文文档里才生效；中文由 :lang(zh) .section li 决定间距) */
+  .section-footnote li {
+    margin-bottom: var(--space-md);
+    color: var(--fg-secondary);
+  }
+
+  .checklist {
+    list-style: none;
+    padding-left: 0;
+  }
+
+  .checklist li {
+    padding-left: 24px;
+    position: relative;
+  }
+
+  .checklist li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 2px;
+  }
+
+  /* ========================================
+     BLOCKQUOTE — hairlines above and below, kai body, no fill
      ======================================== */
   blockquote {
     margin: var(--space-lg) 0;
-    padding: var(--space-md) var(--space-lg);
-    background: var(--bg-quote);
-    border-left: 2px solid var(--fg-tertiary);
+    padding: 4px 0 4px 24px;
+    border-left: 1px solid var(--accent);
     border-radius: 0 2px 2px 0;
   }
 
-  blockquote p {
-    font-size: 0.88rem;
-    line-height: 1.7;
-    color: var(--fg-secondary);
-    margin-bottom: 0;
+  .section > blockquote {
+    margin: 32px auto;
+    padding: 18px 0.25em;
+    border-left: 0;
+    border-top: 1px solid var(--line, rgba(0,0,0,.18));
+    border-bottom: 1px solid var(--line, rgba(0,0,0,.18));
+    font-family: var(--font-kai);
+    font-size: 1.0625rem;
+    line-height: 1.9;
+    color: var(--fg);
   }
 
-  blockquote strong {
+  /* Paragraphs set their own serif face, so the kai face above only reaches the citation's dash */
+  blockquote p {
+    font-family: var(--font-serif);
+    font-size: 0.98rem;
+    line-height: 1.8;
     color: var(--fg);
-    font-weight: 600;
+    margin-bottom: 0;
+  }
+  blockquote > p + p { margin-top: 0.6em; }
+
+  blockquote .bq-nested {
+    margin: 10px 0;
+    padding: 2px 0 2px 1em;
+    border-left: 1px solid var(--line, rgba(0,0,0,.2));
+    background: var(--quote-tint, rgba(0,0,0,0.03));
+  }
+
+  .bq-cite {
+    margin-top: 0.7em;
+    font-family: var(--font-serif);
+    font-size: 0.82rem;
+    color: var(--fg-secondary, var(--fg));
+    text-align: right;
   }
 
   /* ========================================
-     DEFINITION CARD — glossary style
+     PULL QUOTE — centred, big opening mark, hairlines
      ======================================== */
-  .def-card {
+  .pullquote {
+    position: relative;
     margin: var(--space-lg) 0;
-    padding: var(--space-md) var(--space-lg);
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 3px;
+    padding: 44px 48px 36px;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    text-align: center;
+  }
+  .section > .pullquote:last-child { margin-bottom: 0; }
+  .pullquote + .pullquote { margin-top: calc(-1 * var(--space-lg)); }
+
+  .pullquote::before {
+    content: "“";
+    display: block;
+    font-family: Georgia, var(--font-serif);
+    font-size: 5rem;
+    line-height: 0.6;
+    color: var(--accent-ink, var(--accent));
+    margin-bottom: 8px;
   }
 
-  .def-card-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--fg-tertiary);
-    margin-bottom: var(--space-xs);
-  }
-
-  .def-card-term {
+  .pullquote p {
     font-family: var(--font-serif);
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: var(--space-xs);
+    font-size: 1.6rem;
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+    color: var(--fg);
+    margin-bottom: 0;
   }
 
-  .def-card-body {
-    font-size: 0.88rem;
-    line-height: 1.7;
-    color: var(--fg-secondary);
+  .pullquote .accent-mark,
+  .pullquote strong { color: var(--accent-ink, var(--accent)); }
+
+  .pq-cite {
+    margin-top: var(--space-md);
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.02em;
+    text-align: center;
   }
+  .pq-cite::before { content: "—— "; }
 
   /* ========================================
      HIGHLIGHT CARD — key insight
      ======================================== */
   .highlight-card {
     margin: var(--space-md) 0;
-    padding: var(--space-lg) var(--space-lg);
+    padding: var(--space-lg);
     background: var(--bg-highlight);
     color: var(--fg-highlight);
     border-radius: 3px;
+    box-shadow: inset 4px 0 0 var(--accent);
     position: relative;
   }
 
@@ -464,595 +521,36 @@
   }
 
   /* ========================================
-     LIST
+     DEFINITION CARD — glossary style
      ======================================== */
-  ul, ol {
-    margin: var(--space-md) 0 var(--space-lg);
-    padding-left: var(--space-lg);
-  }
-
-  li {
-    font-size: 0.95rem;
-    line-height: 1.85;
-    margin-bottom: var(--space-sm);
-  }
-
-  li::marker {
-    color: var(--fg-tertiary);
-  }
-
-  /* Footnote section — smaller text, more spacing between items */
-  .section-footnote {
-    border-top: 1px solid var(--border-light);
-    padding-top: var(--space-lg);
-  }
-  .section-footnote li {
-    font-size: 0.8rem;
-    line-height: 1.7;
-    margin-bottom: var(--space-md);
-    color: var(--fg-secondary);
-  }
-  .section-footnote li strong {
-    color: var(--fg);
-  }
-  .section-footnote h2 {
-    font-size: 1rem;
-  }
-
-  /* Checklist-style list */
-  .checklist {
-    list-style: none;
-    padding-left: 0;
-  }
-
-  .checklist li {
-    padding-left: 24px;
-    position: relative;
-  }
-
-  .checklist li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 8px;
-    width: 12px;
-    height: 12px;
-    border: 1.5px solid var(--border);
-    border-radius: 2px;
-  }
-
-  /* ========================================
-     DATA FIGURE — chart area
-     ======================================== */
-  .data-figure {
-    margin: var(--space-xl) 0;
-    padding: var(--space-lg);
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 3px;
-  }
-
-  .data-figure-title {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--fg-tertiary);
-    margin-bottom: var(--space-lg);
-  }
-
-  /* Bar chart with crosshatch fills */
-  .bar-chart {
-    display: flex;
-    align-items: flex-end;
-    gap: var(--space-md);
-    height: 180px;
-    padding-bottom: var(--space-lg);
-    border-bottom: 1px solid var(--border);
-  }
-
-  .bar-item {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-sm);
-    height: 100%;
-    justify-content: flex-end;
-  }
-
-  .bar {
-    width: 100%;
-    max-width: 64px;
-    border-radius: 2px 2px 0 0;
-    position: relative;
-    background: var(--fg);
-  }
-
-  /* crosshatch pattern for bars */
-  .bar.hatch {
-    background: var(--bg);
-    border: 1.5px solid var(--fg);
-  }
-
-  .bar.hatch::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6L6 0M-1 1L1 -1M5 7L7 5' stroke='%231a1a1a' stroke-width='.8'/%3E%3C/svg%3E");
-    border-radius: 2px 2px 0 0;
-  }
-
-  /* dot pattern for bars */
-  .bar.dots {
-    background: var(--bg);
-    border: 1.5px solid var(--fg);
-  }
-
-  .bar.dots::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='3' cy='3' r='1' fill='%231a1a1a'/%3E%3C/svg%3E");
-    border-radius: 2px 2px 0 0;
-  }
-
-  .bar-value {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--fg-secondary);
-  }
-
-  .bar-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--fg-tertiary);
-    text-align: center;
-    margin-top: var(--space-sm);
-    letter-spacing: 0.02em;
-  }
-
-  .chart-legend {
-    display: flex;
-    gap: var(--space-lg);
-    margin-top: var(--space-md);
-  }
-
-  .chart-legend-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--fg-tertiary);
-    letter-spacing: 0.04em;
-  }
-
-  .legend-swatch {
-    width: 12px;
-    height: 12px;
-    border-radius: 1px;
-  }
-
-  .legend-swatch.solid { background: var(--fg); }
-
-  .legend-swatch.hatch {
-    background: var(--bg);
-    border: 1px solid var(--fg);
-    position: relative;
-  }
-
-  .legend-swatch.hatch::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6L6 0M-1 1L1 -1M5 7L7 5' stroke='%231a1a1a' stroke-width='.8'/%3E%3C/svg%3E");
-  }
-
-  .legend-swatch.dots {
-    background: var(--bg);
-    border: 1px solid var(--fg);
-    position: relative;
-  }
-
-  .legend-swatch.dots::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg width='6' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='3' cy='3' r='1' fill='%231a1a1a'/%3E%3C/svg%3E");
-  }
-
-  /* ========================================
-     TABLE
-     ======================================== */
-  .table-wrap {
-    margin: var(--space-lg) 0;
-    overflow-x: auto;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.88rem;
-  }
-
-  th {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    text-align: left;
-    padding: var(--space-sm) var(--space-md);
-    border-bottom: 2px solid var(--fg);
-    color: var(--fg-tertiary);
-    font-weight: 500;
-  }
-
-  td {
-    padding: var(--space-sm) var(--space-md);
-    border-bottom: 1px solid var(--border-light);
-    vertical-align: top;
-    line-height: 1.6;
-  }
-
-  tr:last-child td {
-    border-bottom: 1px solid var(--border);
-  }
-
-  /* ========================================
-     CODE BLOCK
-     ======================================== */
-  pre {
+  .def-card {
     margin: var(--space-lg) 0;
     padding: var(--space-md) var(--space-lg);
-    background: var(--fg);
-    color: var(--bg);
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
     border-radius: 3px;
-    overflow-x: auto;
+  }
+
+  .def-card-label {
     font-family: var(--font-mono);
-    font-size: 0.82rem;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+    margin-bottom: var(--space-xs);
+  }
+
+  .def-card-term {
+    font-family: var(--font-serif);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: var(--space-xs);
+  }
+
+  .def-card-body {
+    font-size: 0.88rem;
     line-height: 1.7;
-  }
-  pre code {
-    background: none;
-    padding: 0;
-    font-size: inherit;
-    color: inherit;
-  }
-  code {
-    font-family: var(--font-mono);
-    font-size: 0.85em;
-    background: var(--border-light);
-    padding: 2px 5px;
-    border-radius: 2px;
-  }
-
-  /* ========================================
-     IMAGE — single & gallery
-     ======================================== */
-  figure {
-    margin: var(--space-xl) 0;
-  }
-
-  figure img {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 2px;
-    border: 1px solid var(--border-light);
-  }
-
-  figcaption {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    color: var(--fg-tertiary);
-    margin-top: var(--space-sm);
-    text-align: center;
-  }
-
-  /* Image gallery — horizontal scroll */
-  .gallery {
-    margin: var(--space-xl) 0;
-    padding: 0;
-    display: flex;
-    gap: var(--space-md);
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-
-  .gallery::-webkit-scrollbar {
-    height: 4px;
-  }
-
-  .gallery::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .gallery::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 2px;
-  }
-
-  .gallery-item {
-    flex: 0 0 auto;
-    width: 280px;
-    scroll-snap-align: start;
-  }
-
-  .gallery-item img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    display: block;
-    border-radius: 2px;
-    border: 1px solid var(--border-light);
-  }
-
-  .gallery-cap {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    color: var(--fg-tertiary);
-    margin-top: var(--space-sm);
-    line-height: 1.5;
-  }
-
-  .gallery-hint {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    color: var(--fg-tertiary);
-    letter-spacing: 0.04em;
-    margin-top: var(--space-sm);
-    margin-bottom: var(--space-sm);
-    text-align: right;
-  }
-
-  /* Image placeholder for demo */
-  .img-placeholder {
-    width: 100%;
-    aspect-ratio: 16/9;
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .img-placeholder::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg width='8' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 8L8 0M-1 1L1 -1M7 9L9 7' stroke='%23d4d0c8' stroke-width='.5'/%3E%3C/svg%3E");
-    opacity: 0.5;
-  }
-
-  .img-placeholder span {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.06em;
-    color: var(--fg-tertiary);
-    text-transform: uppercase;
-    position: relative;
-    z-index: 1;
-    background: var(--bg-card);
-    padding: 2px 8px;
-  }
-
-  .gallery-item .img-placeholder {
-    aspect-ratio: 3/2;
-    height: 180px;
-  }
-
-  /* ========================================
-     GALLERY GRID — 2-up image grid (Magazine alternative to scroll gallery)
-     ======================================== */
-  .gallery-grid {
-    margin: var(--space-xl) 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-md);
-  }
-
-  .gallery-grid-item img {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 2px;
-    border: 1px solid var(--border-light);
-  }
-
-  .gallery-grid-item .img-placeholder {
-    aspect-ratio: 16/10;
-  }
-
-  .gallery-grid-item .gallery-cap {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    color: var(--fg-tertiary);
-    margin-top: var(--space-sm);
-    line-height: 1.5;
-  }
-
-  /* ========================================
-     TOC SIDEBAR — warm palette table of contents
-     ======================================== */
-  .toc {
-    position: fixed;
-    left: 0; top: 0;
-    width: 0; height: 0;
-    overflow: visible;
-    z-index: 100;
-    pointer-events: none;
-  }
-
-  .toc-toggle {
-    position: fixed;
-    left: var(--space-lg); top: var(--space-lg);
-    width: 36px; height: 36px;
-    display: flex; align-items: center; justify-content: center;
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 3px;
-    cursor: pointer;
-    color: var(--fg-tertiary);
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-    z-index: 102;
-    pointer-events: auto;
-  }
-
-  .toc-toggle:hover {
-    background: var(--fg);
-    color: var(--bg);
-    border-color: var(--fg);
-  }
-
-  .toc-panel {
-    position: fixed;
-    left: 0; top: 0; bottom: 0;
-    width: 280px;
-    background: var(--bg-card);
-    border-right: 1px solid var(--border-light);
-    padding: var(--space-3xl) var(--space-lg) var(--space-2xl);
-    overflow-y: auto;
-    transform: translateX(-100%);
-    transition: transform 0.25s cubic-bezier(.2, 0, .38, .9);
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-    box-shadow: 4px 0 20px rgba(0,0,0,0.06);
-    z-index: 101;
-    pointer-events: auto;
-  }
-
-  .toc-open .toc-panel {
-    transform: translateX(0);
-  }
-
-  .toc-open .toc-toggle {
-    background: var(--fg);
-    color: var(--bg);
-    border-color: var(--fg);
-  }
-
-  .toc-header {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--fg-tertiary);
-    margin-bottom: var(--space-lg);
-  }
-
-  .toc-item {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-sm);
-    padding: var(--space-xs) 0;
-    font-family: var(--font-sans);
-    font-size: 13px;
-    font-weight: 400;
     color: var(--fg-secondary);
-    text-decoration: none;
-    line-height: 1.5;
-    transition: color 0.15s;
-  }
-
-  .toc-item:hover {
-    color: var(--accent-ink, var(--accent));
-  }
-
-  .toc-item.toc-active {
-    color: var(--accent-ink, var(--accent));
-    font-weight: 600;
-  }
-
-  .toc-num {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--fg-tertiary);
-    flex-shrink: 0;
-    width: 22px;
-  }
-
-  .toc-active .toc-num {
-    color: var(--accent-ink, var(--accent));
-  }
-
-  /* ========================================
-     EMBED CARD — inline SVG / UI preview
-     ======================================== */
-  .embed-card {
-    margin: var(--space-xl) 0;
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 3px;
-    overflow: hidden;
-  }
-
-  .embed-label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--fg-highlight);
-    padding: var(--space-xs) var(--space-md);
-    background: var(--accent);
-    display: inline-block;
-  }
-
-  .embed-body {
-    padding: var(--space-lg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 200px;
-  }
-
-  .embed-body svg {
-    max-width: 100%;
-    height: auto;
-  }
-
-  .embed-caption {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    color: var(--fg-tertiary);
-    padding: 0 var(--space-md) var(--space-md);
-  }
-
-  /* ========================================
-     FIGURE CARD — full-width image with caption
-     ======================================== */
-  .figure-card {
-    margin: var(--space-xl) 0;
-  }
-
-  .figure-card img {
-    width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 2px;
-    border: 1px solid var(--border-light);
-    object-fit: cover;
-  }
-
-  .figure-card figcaption {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    color: var(--fg-tertiary);
-    margin-top: var(--space-sm);
   }
 
   /* ========================================
@@ -1141,143 +639,7 @@
   }
 
   /* ========================================
-     CHART ROW — Chart.js containers
-     ======================================== */
-  .chart-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-md);
-    margin: var(--space-xl) 0;
-  }
-
-  .chart-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-light);
-    border-radius: 3px;
-    padding: var(--space-lg);
-  }
-
-  .chart-card-title {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--fg-tertiary);
-    margin-bottom: var(--space-md);
-  }
-
-  .chart-card canvas {
-    width: 100% !important;
-    height: 220px !important;
-  }
-
-  /* ========================================
-     SECTION HEADER — passthrough wrapper
-     (Swiss uses flex row for number + h2;
-      Magazine keeps them separate in the grid,
-      so this wrapper just passes children through.)
-     ======================================== */
-  .section-header {
-    display: contents;
-  }
-
-  /* ========================================
-     PULL QUOTE — big callout
-     ======================================== */
-  .pullquote {
-    margin: var(--space-lg) 0;
-    padding: var(--space-lg) 0;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-  }
-
-  /* Avoid double borders: pullquote at end of section */
-  .section > .pullquote:last-child {
-    margin-bottom: 0;
-    border-bottom: none;
-  }
-
-  /* Avoid double borders: pullquote right before/after section border */
-  .section + .pullquote {
-    border-top: none;
-    margin-top: 0;
-  }
-
-  .pullquote + .section {
-    border-top: none;
-  }
-
-  /* Avoid double borders: section ending with pullquote inherits its bottom */
-  .section:has(> .pullquote:last-child) {
-    border-bottom: none;
-  }
-
-  /* Avoid double borders: consecutive pullquotes share one rule */
-  .pullquote + .pullquote {
-    border-top: none;
-    margin-top: calc(-1 * var(--space-lg));
-  }
-
-  /* Thematic breaks (---) never stack on another rule:
-     drop them at section start/end (the section border already separates),
-     next to a pullquote (which has its own rules), or when repeated. */
-  .section > .divider:first-child,
-  .section > .section-number + h2 + .divider,
-  .section > .divider:last-child,
-  .divider + .divider,
-  .pullquote + .divider { display: none; }
-  .divider + .pullquote { border-top: none; }
-  .divider { grid-column: 2 / 12; margin: var(--space-lg) 0; }
-
-  .pullquote p {
-    font-family: var(--font-serif);
-    font-size: 1.5rem;
-    line-height: 1.5;
-    letter-spacing: -0.01em;
-    color: var(--fg);
-    margin-bottom: 0;
-  }
-
-  .pullquote .accent-mark {
-    color: var(--accent-ink, var(--accent));
-  }
-
-  /* ========================================
-     BIG NUMBER — data callout
-     ======================================== */
-  .big-number-row {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-lg);
-    margin: var(--space-xl) 0;
-  }
-
-  .big-number {
-    text-align: center;
-    padding: var(--space-lg) var(--space-md);
-    border: 1px solid var(--border-light);
-    border-radius: 3px;
-  }
-
-  .big-number .num {
-    font-family: var(--font-mono);
-    font-size: 2.2rem;
-    font-weight: 700;
-    letter-spacing: -0.03em;
-    line-height: 1;
-    margin-bottom: var(--space-sm);
-  }
-
-  .big-number .label {
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--fg-tertiary);
-  }
-
-  /* ========================================
-     TIMELINE / PROCESS
+     PROCESS — numbered steps
      ======================================== */
   .process {
     margin: var(--space-xl) 0;
@@ -1297,7 +659,7 @@
   .process-num {
     font-family: var(--font-mono);
     font-size: 11px;
-    color: var(--fg-tertiary);
+    color: var(--accent-ink, var(--accent));
     flex: 0 0 32px;
     padding-top: 2px;
   }
@@ -1319,14 +681,424 @@
   }
 
   /* ========================================
-     DIVIDER
+     EMBED CARD — inline SVG / UI preview
      ======================================== */
-  .divider {
-    margin: var(--space-2xl) 0;
-    border: none;
-    border-top: 1px solid var(--border);
+  .embed-card {
+    margin: var(--space-xl) 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 3px;
+    overflow: hidden;
   }
 
+  .embed-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--fg-highlight);
+    padding: var(--space-xs) var(--space-md);
+    background: var(--accent);
+    display: inline-block;
+  }
+
+  .embed-body {
+    padding: var(--space-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 200px;
+  }
+
+  .embed-body svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .embed-caption {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: var(--fg-tertiary);
+    padding: 0 var(--space-md) var(--space-md);
+  }
+
+  /* ========================================
+     GALLERY — horizontal scroll of placeholders
+     ======================================== */
+  .gallery {
+    margin: var(--space-xl) 0;
+    padding: 0;
+    display: flex;
+    gap: var(--space-md);
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+
+  .gallery::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .gallery::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .gallery::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 2px;
+  }
+
+  .gallery-item {
+    flex: 0 0 auto;
+    width: 280px;
+    scroll-snap-align: start;
+  }
+
+  .gallery-item img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    display: block;
+    border-radius: 2px;
+    border: 1px solid var(--border-light);
+  }
+
+  .gallery-cap {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    color: var(--fg-tertiary);
+    margin-top: var(--space-sm);
+    line-height: 1.5;
+  }
+
+  .gallery-hint {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--fg-tertiary);
+    letter-spacing: 0.04em;
+    margin-top: var(--space-sm);
+    margin-bottom: var(--space-sm);
+    text-align: right;
+  }
+
+  .img-placeholder {
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .img-placeholder::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg width='8' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 8L8 0M-1 1L1 -1M7 9L9 7' stroke='%23d4d0c8' stroke-width='.5'/%3E%3C/svg%3E");
+    opacity: 0.5;
+  }
+
+  .img-placeholder span {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--fg-tertiary);
+    text-transform: uppercase;
+    position: relative;
+    z-index: 1;
+    background: var(--bg-card);
+    padding: 2px 8px;
+  }
+
+  .gallery-item .img-placeholder {
+    aspect-ratio: 3/2;
+    height: 180px;
+  }
+
+  /* ========================================
+     FIGURES — single image, 2–3 image row, 4+ image strip, video/iframe
+     (markdown images carry an inline border-radius from render.mjs)
+     ======================================== */
+  .figure-card {
+    margin: var(--space-xl) 0;
+  }
+
+  .figure-card img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 2px;
+    border: 1px solid var(--border-light);
+    object-fit: cover;
+  }
+
+  .figure-card figcaption {
+    margin-top: 12px;
+    font-family: var(--font-serif);
+    font-size: 13px;
+    line-height: 1.6;
+    letter-spacing: 0;
+    color: var(--fg-secondary, var(--fg));
+    text-align: left;
+  }
+  /* 图注首句加粗当标题 */
+  figcaption .cap-lead { font-weight: 600; font-style: normal; color: var(--fg); margin-right: .35em; }
+
+  .img-row { display: grid; gap: 12px; margin-top: 2.2em; margin-bottom: 2.2em; }
+  .img-row-2 { grid-template-columns: 1fr 1fr; }
+  .img-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .img-row .figure-card { margin: 0; min-width: 0; }
+  .img-row .figure-card img { aspect-ratio: 4 / 3; object-fit: cover; }
+
+  .img-strip-wrap { margin-top: 2.2em; margin-bottom: 2.2em; }
+  .img-strip { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; }
+  .img-strip .figure-card { flex: 0 0 62%; margin: 0; scroll-snap-align: start; }
+  .img-strip-hint { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); text-align: right; margin-top: 6px; }
+
+  .media-embed video, .media-embed iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; display: block; border: 0; background: #000; }
+
+  /* ========================================
+     TABLE — book-style three-line table
+     ======================================== */
+  .table-wrap {
+    margin: 2em 0;
+    overflow-x: auto;
+  }
+
+  .table-wrap table {
+    width: 100%;
+    min-width: 0;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .table-wrap th {
+    padding: 10px 12px;
+    border-top: 1.5px solid var(--fg);
+    border-bottom: 1.5px solid var(--fg);
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0;
+    color: var(--fg);
+    text-align: left;
+    vertical-align: bottom;
+  }
+
+  .table-wrap td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--tbl-line, rgba(0,0,0,0.09));
+    font-family: var(--font-serif);
+    line-height: 1.45;
+    color: var(--fg);
+    vertical-align: top;
+  }
+  .table-wrap td:first-child { white-space: nowrap; }
+  .table-wrap tbody tr:last-child td { border-bottom: 1.5px solid var(--fg); }
+  /* Leftover zebra reset. Its !important also beats ui.css's [contenteditable]
+     hover/focus tint, so even rows never tint; kept for parity. */
+  .table-wrap tbody tr:nth-child(even) td { background: none !important; }
+
+  .table-wrap .al-num, .table-wrap .al-right { text-align: right; }
+  .table-wrap td.al-num, .table-wrap td.al-right { white-space: nowrap; }
+  .table-wrap .al-center { text-align: center; }
+  .table-wrap td strong { color: var(--accent-ink, var(--accent)); font-weight: 700; }
+  .table-wrap td small, .table-wrap td .sub { color: var(--fg-tertiary); font-size: 0.78em; }
+
+  .table-caption {
+    caption-side: top;
+    margin-top: var(--space-sm);
+    margin-bottom: 10px;
+    font-family: var(--font-serif);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    letter-spacing: 0;
+    color: var(--fg-secondary);
+    text-align: center;
+  }
+
+  /* ========================================
+     BAR CHART (```chart) — pure HTML/CSS, follows the palette
+     ======================================== */
+  .hchart {
+    margin: 2.2em 0;
+    padding: 30px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .hc-title { margin-bottom: 22px; font-family: var(--font-serif); font-size: 1.1rem; font-weight: 600; color: var(--fg); text-align: center; }
+  .hc-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; margin-bottom: 22px; font-size: 0.78rem; color: var(--fg-secondary); }
+  .hc-key i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; background: var(--hc-mute); }
+  .hc-row { display: grid; grid-template-columns: minmax(120px, 30%) 1fr; gap: 18px; align-items: center; padding: 7px 0; }
+  .hc-group { padding: 16px 0; border-top: 1px solid var(--tbl-line, rgba(0,0,0,0.08)); }
+  .hc-label { font-size: 0.82rem; color: var(--fg); line-height: 1.35; }
+  .hc-bars { display: grid; gap: 6px; }
+  .hc-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 20px; }
+  .hc-group .hc-bar { height: 14px; }
+  .hc-fill { display: block; height: 100%; background: var(--hc-mute); flex: none; }
+  .hc-val { font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--fg-secondary); white-space: nowrap; }
+  .hc-group .hc-val { font-size: 0.68rem; }
+  .hc-hi .hc-fill, .hc-key.hc-hi i { background: var(--accent); }
+  .hc-hi .hc-val, .hc-row.hc-hi .hc-label { color: var(--fg); font-weight: 600; }
+  .hc-s1.hc-hi .hc-fill, .hc-key.hc-s1.hc-hi i { background: var(--accent); opacity: 0.6; }
+  .hc-na .hc-val { color: var(--fg-tertiary); font-style: italic; }
+  .hc-cap {
+    margin-top: 20px;
+    font-family: var(--font-serif);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    letter-spacing: 0;
+    color: var(--fg-secondary);
+    text-align: center;
+  }
+
+  /* ========================================
+     CODE
+     ======================================== */
+  pre {
+    margin: var(--space-lg) 0;
+    padding: var(--space-md) var(--space-lg);
+    background: var(--fg);
+    color: var(--bg);
+    border-radius: 3px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.7;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+    color: inherit;
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: var(--border-light);
+    padding: 2px 5px;
+    border-radius: 2px;
+  }
+  .section code { overflow-wrap: anywhere; word-break: break-all; }
+
+  /* ========================================
+     TOC SIDEBAR (open/push behaviour lives in ui.css)
+     ======================================== */
+  .toc {
+    position: fixed;
+    left: 0; top: 0;
+    width: 0; height: 0;
+    overflow: visible;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  .toc-toggle {
+    position: fixed;
+    left: var(--space-lg); top: var(--space-lg);
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 3px;
+    cursor: pointer;
+    color: var(--fg-tertiary);
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    z-index: 102;
+    pointer-events: auto;
+  }
+
+  .toc-toggle:hover,
+  .toc-open .toc-toggle {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+  }
+
+  .toc-panel {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 320px !important; /* beats ui.css drawer width min(300px, 86vw) */
+    background: var(--bg-card);
+    border-right: 1px solid var(--border-light);
+    padding: var(--space-3xl) var(--space-lg) var(--space-2xl);
+    overflow-y: auto;
+    transform: translateX(-100%);
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+    z-index: 101;
+    pointer-events: auto;
+  }
+
+  .toc-open .toc-panel {
+    transform: translateX(0);
+  }
+
+  .toc-header {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--fg-tertiary);
+    margin-bottom: 18px;
+  }
+
+  /* Narrow tabular number column; groups by whitespace, no rules */
+  .toc-item {
+    display: grid;
+    grid-template-columns: 2.4em 1fr;
+    gap: 0 10px;
+    align-items: baseline;
+    padding: 9px 0;
+    font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    font-weight: 400;
+    line-height: 1.55;
+    color: var(--fg-secondary);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .toc-item:hover {
+    color: var(--accent-ink, var(--accent));
+  }
+
+  .toc-item.toc-active {
+    color: var(--accent-ink, var(--accent));
+    font-weight: 600;
+  }
+
+  .toc-num {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--fg-tertiary);
+    flex-shrink: 0;
+    width: 22px;
+    text-align: right;
+    opacity: .7;
+  }
+
+  .toc-active .toc-num {
+    color: var(--accent-ink, var(--accent));
+  }
+
+  /* ========================================
+     FOOTER
+     ======================================== */
   .divider-dot {
     margin: var(--space-2xl) auto;
     width: 100%;
@@ -1336,15 +1108,16 @@
     letter-spacing: 8px;
   }
 
-  /* ========================================
-     FOOTER
-     ======================================== */
-  footer {
+  .container > footer {
     padding: var(--space-2xl) 0 var(--space-3xl);
     text-align: center;
   }
 
-  footer p {
+  .container > footer > * {
+    grid-column: 1 / -1;
+  }
+
+  .container > footer p {
     font-family: var(--font-mono);
     font-size: 10px;
     letter-spacing: 0.06em;
@@ -1353,407 +1126,41 @@
   }
 
   /* ========================================
-     ACCENT CARRIERS
-     The settings-panel colour switch only changes --accent. Earlier the
-     magazine theme used --accent almost nowhere visible, so switching
-     looked like it did nothing. These are the places the accent shows.
-     ======================================== */
-  .section-number,
-  .section-header .section-number { color: var(--accent-ink, var(--accent)); }
-  blockquote { border-left-color: var(--accent); }
-  li::marker { color: var(--accent-ink, var(--accent)); }
-  .process-num { color: var(--accent-ink, var(--accent)); }
-  .highlight-card { box-shadow: inset 4px 0 0 var(--accent); }
-  .pullquote { border-top-color: var(--accent); }
-  .pullquote .accent-mark, .pullquote strong { color: var(--accent-ink, var(--accent)); }
-  /* no color-mix(): keep colours plain for print/export */
-  .chrome-tag { border-color: var(--accent); }
-  a { text-decoration-color: var(--accent); }
-
-  /* ========================================
-     CJK TYPOGRAPHY — 中文排版规则（v0.8）
-     Rules + sources: references/design-rules.md §中文排版,
-     references/cjk-typography-research.md. Values here are the
-     single source of truth; change them there and here together.
-     ======================================== */
-  :root {
-    --text-size: 1.0625rem;           /* 正文字号 */
-    --text-leading: 1.85;        /* 正文行高：中文 1.5–2 倍 */
-    --text-measure: 36em;           /* 行长 ≈ 36 个汉字（推断值，见调研笔记） */
-    --para-gap: 1em;                /* 段间距：不缩进，靠段距分段（clreq 段落版式之一） */
-  }
-  :lang(zh) body {
-    letter-spacing: 0;              /* 汉字默认密排，不额外加字距 */
-    line-break: strict;             /* 避头尾：句读、闭括号等不出现在行首 */
-    word-break: normal;
-    overflow-wrap: break-word;      /* 长 URL / 长英文词允许断开，避免撑破版心 */
-    text-spacing-trim: normal;      /* 相邻标点挤压（Chrome 123+，需字体带 chws/halt） */
-    hanging-punctuation: allow-end; /* 行尾点号悬挂（目前仅 Safari） */
-    font-kerning: normal;
-  }
-  :lang(zh) .section > p,
-  :lang(zh) .section > ul,
-  :lang(zh) .section > ol,
-  :lang(zh) .section > blockquote,
-  :lang(zh) .section > h3,
-  :lang(zh) .section > .table-wrap + p {
-    max-width: var(--text-measure);
-  }
-  :lang(zh) .section > p,
-  :lang(zh) .section li {
-    font-size: var(--text-size);
-    line-height: var(--text-leading);
-    font-weight: 400;
-  }
-  :lang(zh) .section > p {
-    margin-bottom: var(--para-gap);
-    text-align: justify;            /* clreq §6.2：中文正文原则上两端对齐 */
-    text-justify: inter-character;
-  }
-  :lang(zh) .section li { margin-bottom: 0.35em; }
-  :lang(zh) .section li > p { margin-bottom: 0.35em; text-align: start; }
-  /* 汉字没有真正的斜体：*强调* 用着重号（clreq §5.3.1：横排置于字下） */
-  :lang(zh) em {
-    font-style: normal;
-    -webkit-text-emphasis: filled dot; text-emphasis: filled dot;
-    -webkit-text-emphasis-position: under right; text-emphasis-position: under right;
-  }
-  :lang(zh) em:lang(en), :lang(zh) code em { font-style: italic; text-emphasis: none; -webkit-text-emphasis: none; }
-  /* 中西文间距：render.mjs 插入 .hf-sp；支持 text-autospace 的浏览器用原生间距 */
-  .hf-sp { white-space: normal; }
-  @supports (text-autospace: normal) {
-    :lang(zh) body { text-autospace: normal; }
-    .hf-sp { display: none; }
-  }
-  /* 标题：中文不加负字距，避免笔画粘连；行高收紧 */
-  :lang(zh) h1, :lang(zh) h2, :lang(zh) h3 { letter-spacing: 0; line-break: strict; }
-  :lang(zh) h2, :lang(zh) h3 { line-height: 1.4; }
-  :lang(zh) .hero h1 { line-height: 1.3; }
-
-  /* ========================================
      RESPONSIVE
      ======================================== */
-  /* Tablet: collapse to single column */
   @media (max-width: 1024px) {
     .container { padding: 0 var(--space-xl); }
-
-    .section > *,
-    .hero > *,
-    .hero h1,
-    .hero-subtitle,
-    h2,
-    .section-number,
-    .section > .highlight-card,
-    .section > .gallery-hint,
-    .section > .gallery,
-    .section > .gallery-grid,
-    .section > .pullquote,
-    .section > .big-number-row,
-    .section > .data-figure,
-    .section > .embed-card,
-    .section > .figure-card,
-    .section > .summary-card,
-    .section > .chart-row,
-    .section > .process,
-    .section > .table-wrap,
-    .section > figure,
-    .container > .pullquote > p,
-    footer > * {
-      grid-column: 1 / -1;
-    }
-
-    .section-number {
-      padding-top: 0;
-    }
-
-    .gallery-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .chart-row {
-      grid-template-columns: 1fr;
-    }
+    .section-number { padding-top: 0; }
   }
 
-  @media (max-width: 640px) {
-    .container { padding: 0 var(--space-lg); }
-    .hero h1 { font-size: 1.8rem; }
-    .pullquote p { font-size: 1.15rem; }
-    .big-number-row { grid-template-columns: 1fr; }
-    .big-number .num { font-size: 1.8rem; }
-    .gallery-item { width: 220px; }
-    .summary-grid { grid-template-columns: 1fr; }
-  }
-
-  /* ========================================
-     PRINT / PDF
-     ======================================== */
-  @media print {
-    body { background: #fff; }
-    /* break rules live in ui.css (shared). Never put break-inside:avoid on
-       .section/.hero: a whole chapter that doesn't fit gets pushed to the
-       next page and leaves a half-empty page behind. */
-    .gallery { flex-wrap: wrap; overflow: visible; }
-    .gallery-item { width: 45%; }
-    .gallery-grid { grid-template-columns: 1fr 1fr; }
-    .toc { display: none; }
-  }
-
-  /* ========================================
-     v0.9 · 单一阅读栏：正文与图片同宽、整体居中
-     （旧版正文 36em 左对齐在 10 栏里，图片却撑满 10/12 栏，两者不对齐）
-     ======================================== */
-  :root { --col: calc(36 * 1.0625rem); --accent-ink: var(--accent); }
-  .section > *, .hero > * {
-    grid-column: 1 / -1 !important;
-    justify-self: center;
-    width: 100%;
-    max-width: var(--col) !important;
-  }
-  .section > .gallery, .section > .gallery-hint { max-width: none !important; }
-  .section figure img { width: 100%; }
-  body { transition: background-color .2s ease, color .2s ease; }
-
-  /* 嵌套引用 / 引用署名 */
-  blockquote > p + p { margin-top: 0.6em; }
-  blockquote .bq-nested { margin: 0.8em 0 0.4em; padding: 0.6em 1em; background: var(--bg-card); border-left: 2px solid var(--border); }
-  blockquote .bq-nested .bq-nested { background: var(--bg-quote); }
-  .bq-cite { margin-top: 0.7em; font-size: 0.82rem; color: var(--fg-tertiary); text-align: right; }
-  .bq-cite cite { font-style: normal; }
-  .pq-cite { margin-top: var(--space-md); font-family: var(--font-sans); font-size: 0.8rem; color: var(--fg-tertiary); letter-spacing: 0.02em; }
-  .pq-cite::before { content: "—— "; }
-
-  /* 破折号：两字线不断开；——插入语—— 轻度强调 */
-  .dash { white-space: nowrap; letter-spacing: 0; }
-  .dash-em { color: var(--fg); font-weight: 600; }
-  :root[data-scheme="dark"] img { opacity: 0.94; }
-  /* global `footer` (page footer) styles must not leak into quote attributions */
-  blockquote footer.bq-cite { display: block !important; padding: 0 !important; margin: 0.7em 0 0 !important; border: 0 !important; background: none !important; min-height: 0 !important; text-align: right; }
-  blockquote footer.bq-cite > * { grid-column: auto; }
-
-  /* v0.10 · 宽窄两档：正文窄栏 --col，图片/视频/图组/强调组件破出到 --wide，同一中线 */
-  .section > .figure-card,
-  .section > .img-row,
-  .section > .img-strip-wrap,
-  .section > .media-embed,
-  .section > .gallery, .section > .gallery-hint, .section > .gallery-grid,
-  .section > .pullquote,
-  .section > .highlight-card,
-  .section > .table-wrap,
-  .section > .data-figure, .section > .embed-card, .section > .chart-row { max-width: var(--wide) !important; }
-  .figure-card img { width: 100%; height: auto; display: block; }
-  .img-row { display: grid; gap: 12px; margin-top: 2.2em; margin-bottom: 2.2em; }
-  .img-row-2 { grid-template-columns: 1fr 1fr; }
-  .img-row-3 { grid-template-columns: 1fr 1fr 1fr; }
-  .img-row .figure-card { margin: 0; }
-  .img-row .figure-card img { aspect-ratio: 4 / 3; object-fit: cover; }
-  .img-strip-wrap { margin-top: 2.2em; margin-bottom: 2.2em; }
-  .img-strip { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; }
-  .img-strip .figure-card { flex: 0 0 62%; margin: 0; scroll-snap-align: start; }
-  .img-strip-hint { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); text-align: right; margin-top: 6px; }
-  .media-embed video, .media-embed iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; display: block; border: 0; background: #000; }
-  .toc-panel { box-shadow: none !important; background: var(--bg-card) !important; }
   @media (max-width: 760px) {
     .img-row-3 { grid-template-columns: 1fr 1fr; }
     .img-strip .figure-card { flex-basis: 85%; }
   }
-  @media print { .img-strip { flex-wrap: wrap; overflow: visible; } .img-strip .figure-card { flex-basis: 48%; } .img-strip-hint { display: none; } }
-  :root { --wide: 920px; }
-  .section > blockquote { max-width: var(--wide) !important; }
-  .toc-panel { border-right: 1px solid var(--border-light); }
-  .figure-card figcaption { font-family: var(--font-mono); font-size: 0.75rem; color: var(--fg-tertiary); margin-top: 8px; }
-  .img-row > .figure-card { grid-column: auto !important; min-width: 0; }
 
-  /* ===== v0.11 · 原生表格 + 原生条形图（纯 HTML/CSS，可导出 PDF/长图，跟随色板） ===== */
-  .section > .hchart { max-width: var(--wide) !important; }
-  .table-wrap { overflow-x: auto; margin-top: 2em; margin-bottom: 2em; }
-  .table-wrap table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 0.9rem; }
-  .table-wrap th { text-align: left; font-weight: 600; color: var(--fg); padding: 10px 12px; border-bottom: 1.5px solid var(--fg); vertical-align: bottom; line-height: 1.35; }
-  .table-wrap td { padding: 9px 12px; color: var(--fg); border-bottom: 1px solid var(--tbl-line, rgba(0,0,0,0.09)); vertical-align: top; line-height: 1.45; background: none; }
-  .table-wrap tbody tr:nth-child(even) td { background: var(--tbl-zebra, rgba(0,0,0,0.025)); }
-  .table-wrap .al-num, .table-wrap .al-right { text-align: right; white-space: nowrap; }
-  .table-wrap .al-center { text-align: center; }
-  .table-wrap td strong { color: var(--accent-ink, var(--accent)); font-weight: 700; }
-  .table-wrap td small, .table-wrap td .sub { color: var(--fg-tertiary); font-size: 0.78em; }
-  .table-caption { caption-side: top; font-size: 0.8rem; color: var(--fg-secondary); margin-bottom: 10px; line-height: 1.5; }
-  .hchart { margin-top: 2.2em; margin-bottom: 2.2em; padding: 24px 28px; background: var(--bg-card); }
-  .hc-title { font-weight: 600; font-size: 1rem; color: var(--fg); margin-bottom: 16px; }
-  .hc-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 14px; font-size: 0.78rem; color: var(--fg-secondary); }
-  .hc-key i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; background: var(--hc-mute); }
-  .hc-row { display: grid; grid-template-columns: minmax(120px, 30%) 1fr; gap: 12px; align-items: center; padding: 3px 0; }
-  .hc-group { padding: 8px 0; border-top: 1px solid var(--tbl-line, rgba(0,0,0,0.08)); }
-  .hc-label { font-size: 0.82rem; color: var(--fg); line-height: 1.35; }
-  .hc-bars { display: grid; gap: 3px; }
-  .hc-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 18px; }
-  .hc-group .hc-bar { height: 13px; }
-  .hc-fill { display: block; height: 100%; background: var(--hc-mute); flex: none; }
-  .hc-val { font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--fg-secondary); white-space: nowrap; }
-  .hc-group .hc-val { font-size: 0.68rem; }
-  .hc-hi .hc-fill, .hc-hi.hc-key i, .hc-key.hc-hi i { background: var(--accent); }
-  .hc-hi .hc-val, .hc-row.hc-hi .hc-label { color: var(--fg); font-weight: 600; }
-  .hc-s1.hc-hi .hc-fill, .hc-key.hc-s1.hc-hi i { background: var(--accent); opacity: 0.6; }
-  .hc-na .hc-val { color: var(--fg-tertiary); font-style: italic; }
-  .hc-cap { margin-top: 14px; font-size: 0.72rem; color: var(--fg-tertiary); line-height: 1.5; }
-  :root { --hc-mute: #b9b6ae; }
-  @media (max-width: 640px) { .hc-row { grid-template-columns: 1fr; gap: 4px; } .hchart { padding: 18px; } }
-  @media print { .hchart, .table-wrap tr { break-inside: avoid; } }
-
-  /* ===== 引用可读性：正文色 + 极浅底；普通引用回到正文宽度，只有强调组件破出 ===== */
-  .section > blockquote { max-width: var(--col) !important; }
-  blockquote p, blockquote li { color: var(--fg) !important; }
-  blockquote .bq-cite { color: var(--fg-secondary) !important; }
-  blockquote { background: var(--quote-tint, rgba(0,0,0,0.028)) !important; border-left: 2px solid var(--accent) !important; }
-  blockquote p { font-size: 0.98rem !important; line-height: 1.8 !important; }
-  :root[data-scheme="dark"] { --hc-mute: #55555b; --tbl-line: rgba(255,255,255,0.1); --tbl-zebra: rgba(255,255,255,0.03); --quote-tint: rgba(255,255,255,0.04); }
-  .table-wrap th { background: none !important; color: var(--fg) !important; }
-  .table-wrap th { font-family: var(--font-sans) !important; text-transform: none !important; letter-spacing: 0 !important; font-size: 0.78rem !important; white-space: normal !important; }
-  .table-wrap table { table-layout: auto; min-width: 0 !important; }
-  .table-wrap td:first-child { white-space: nowrap; }
-  .table-caption, .hc-cap { font-family: var(--font-sans) !important; text-transform: none !important; letter-spacing: 0 !important; text-align: left !important; }
-  .table-wrap > table { margin: 0 !important; }
-
-  /* ===== v0.12 · 共同：目录字号 ≥ 正文；条形图更疏朗 ===== */
-  .toc-panel { width: 320px !important; }
-  .toc-header { font-size: 13px !important; margin-bottom: 18px !important; }
-  .toc-item { font-size: 1.0625rem !important; line-height: 1.55 !important; padding: 9px 0 !important; gap: 12px !important; align-items: baseline !important; }
-  .toc-num { font-size: 0.8rem !important; }
-  .hchart { padding: 30px 34px !important; }
-  .hc-title { margin-bottom: 22px !important; }
-  .hc-legend { margin-bottom: 22px !important; gap: 8px 20px !important; }
-  .hc-row { padding: 7px 0 !important; gap: 18px !important; }
-  .hc-group { padding: 16px 0 !important; }
-  .hc-bars { gap: 6px !important; }
-  .hc-bar { height: 20px !important; }
-  .hc-group .hc-bar { height: 14px !important; }
-  .hc-cap { margin-top: 20px !important; }
-
-  /* ======================================================================
-     v0.12 · 杂志风 = 文学/编辑排版：居中轴、衬线正文、首字下沉、花饰分隔、
-     斜体图注、居中大引号金句。与瑞士风的“左轨非对称网格”刻意相反。
-     ====================================================================== */
-  .section p, .section li, .section td, blockquote p { font-family: var(--font-serif); }
-  .section > p, .section li { font-size: 1.08rem; line-height: 1.95; }
-  .hero { text-align: center; padding-top: 72px; padding-bottom: 40px; }
-  .hero h1 { font-size: 2.7rem; line-height: 1.3; font-weight: 600; letter-spacing: 0.01em; }
-  .hero-subtitle { font-style: italic; color: var(--fg-secondary); margin: 18px auto 0; }
-  .hero::after { content: "❦"; grid-column: 1 / -1; justify-self: center; margin-top: 34px; color: var(--accent-ink, var(--accent)); font-size: 1.4rem; }
-  .doc-chrome { text-align: center; }
-
-  /* 章节：花饰分隔 + 居中罗马式小号章节号 + 居中标题 */
-  .section { border-top: none !important; padding-top: 56px; }
-  .section::before { content: "· · ✦ · ·"; grid-column: 1 / -1; justify-self: center; color: var(--fg-tertiary); letter-spacing: 0.35em; font-size: 0.9rem; margin-bottom: 40px; }
-  .section:first-of-type::before { content: none; }
-  .section > .section-number { text-align: center; font-family: var(--font-serif); font-style: italic; font-size: 0.95rem; letter-spacing: 0.2em; color: var(--accent-ink, var(--accent)); margin-bottom: 10px; }
-  .section > .section-number::before { content: "— "; } .section > .section-number::after { content: " —"; }
-  .section > h2 { text-align: center; font-size: 1.85rem; line-height: 1.4; font-weight: 600; margin-bottom: 34px; }
-  .section > h2 + .divider, .section > hr.divider { display: none; }
-  .section > h3 { font-family: var(--font-serif); font-style: italic; font-weight: 600; text-align: center; }
-
-
-
-  /* 图注：居中斜体衬线 */
-  .figure-card figcaption, .hc-cap, .table-caption { font-family: var(--font-serif) !important; font-style: italic; text-align: center !important; font-size: 0.85rem !important; color: var(--fg-secondary) !important; }
-  .figure-card figcaption { margin-top: 12px !important; }
-
-  /* 金句：居中、大引号、上下细线 */
-  .pullquote { text-align: center; border-top: 1px solid var(--border) !important; border-bottom: 1px solid var(--border) !important; padding: 44px 48px 36px !important; position: relative; }
-  .pullquote::before { content: "“"; display: block; font-family: Georgia, var(--font-serif); font-size: 5rem; line-height: 0.6; color: var(--accent-ink, var(--accent)); margin-bottom: 8px; }
-  .pullquote p { font-size: 1.6rem !important; line-height: 1.6 !important; font-style: italic; }
-  .pq-cite { text-align: center; font-style: normal; }
-
-  /* 普通引用：居中轴上的“边注”感——左侧细线，衬线正文色 */
-  blockquote { background: none !important; border-left: 1px solid var(--accent) !important; padding: 4px 0 4px 24px !important; }
-  blockquote .bq-nested { background: var(--quote-tint, rgba(0,0,0,0.03)) !important; }
-
-  /* 表格：书籍式三线表 */
-  .table-wrap th { border-top: 1.5px solid var(--fg); }
-  .table-wrap tbody tr:nth-child(even) td { background: none !important; }
-  .table-wrap tbody tr:last-child td { border-bottom: 1.5px solid var(--fg); }
-  .hchart { background: none !important; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding-left: 0 !important; padding-right: 0 !important; }
-  .hc-title { text-align: center; font-family: var(--font-serif); font-size: 1.1rem !important; }
-  .hc-legend { justify-content: center; }
-
-  /* v0.13 · 章节头只有两件：一行“细线 ✦ 04 ✦ 细线”花饰编号 + 标题 */
-  .section::before { content: none !important; }
-  .section > .section-number { display: flex !important; align-items: center; justify-content: center; gap: 14px; font-style: normal !important; letter-spacing: 0.18em !important; font-size: 0.9rem !important; margin-bottom: 18px !important; }
-  .section > .section-number::before, .section > .section-number::after { content: "" !important; display: block; width: 56px; height: 1px; background: currentColor; opacity: 0.45; }
-  .section > .section-number { --orn: "✦"; }
-  .section > .section-number span.orn { opacity: 0.7; }
-  .section { border-bottom: none !important; padding-top: 72px !important; }
-
-  /* v0.15 · 首字下沉已删除（不适合中文）；章节号 = “04” + 右侧逐渐变小变淡的星，无横线 */
-  .section > .section-number { gap: 0 !important; align-items: baseline !important; }
-  .section > .section-number::before, .section > .section-number::after { content: none !important; display: none !important; }
-  .section > .section-number .sn-num { font-size: 1.05rem; letter-spacing: 0.12em; margin-right: 10px; }
-  .section > .section-number .sn-star { display: inline-block; line-height: 1; margin-right: 5px; }
-  .section > .section-number .s1 { font-size: 0.95rem; opacity: 0.9; }
-  .section > .section-number .s2 { font-size: 0.72rem; opacity: 0.65; }
-  .section > .section-number .s3 { font-size: 0.52rem; opacity: 0.42; }
-
-  /* ── v0.16 · 视觉调研落地（中文阅读优先） ───────────────────── */
-  :root { --col: calc(30 * 1.0625rem); --font-kai: "LXGW WenKai", "Kaiti SC", "STKaiti", "KaiTi", "BiauKai", "FangSong", "STFangsong", var(--font-serif, serif); }
-  .section > p, .section li { line-height: 1.85 !important; text-align: justify; }
-  /* 标题：越大越轻，字距放宽 */
-  .section h2, .hero h1 { font-weight: 500 !important; letter-spacing: 0.03em !important; }
-  .section h3 { font-weight: 500 !important; letter-spacing: 0.02em !important; }
-  /* 普通引用：正文栏宽，上下 1px 细线夹楷体，正文色，无底色 */
-  .section > blockquote:not(.pullquote) {
-    border: 0 !important; border-top: 1px solid var(--line, rgba(0,0,0,.18)) !important; border-bottom: 1px solid var(--line, rgba(0,0,0,.18)) !important;
-    background: none !important; padding: 18px 0.25em !important; margin: 32px auto !important;
-    font-family: var(--font-kai) !important; font-size: 1.0625rem !important; line-height: 1.9 !important; color: var(--fg) !important; font-style: normal !important; }
-  .section > blockquote:not(.pullquote) p { color: var(--fg) !important; }
-  .section > blockquote:not(.pullquote) blockquote { border-left: 1px solid var(--line, rgba(0,0,0,.2)) !important; border-top: 0 !important; border-bottom: 0 !important; padding: 2px 0 2px 1em !important; margin: 10px 0 !important; }
-  .section > blockquote footer.bq-cite { font-family: var(--font-serif) !important; font-size: 0.82rem !important; color: var(--fg-secondary, var(--fg)) !important; display: inline; margin-left: .5em; }
-  /* 图注：图下左对齐，衬线斜体 13px，首句加粗当标题 */
-  .figure-card figcaption, .img-row figcaption, .img-strip figcaption, .media-embed figcaption {
-    text-align: left !important; font-size: 13px !important; line-height: 1.6 !important; font-style: italic !important;
-    font-family: var(--font-serif) !important; color: var(--fg-secondary, var(--fg)) !important; letter-spacing: 0 !important; text-transform: none !important; }
-  figcaption .cap-lead { font-weight: 600; font-style: normal; color: var(--fg); margin-right: .35em; }
-  /* 页眉：报头居中，上下细线；标签用“[ 栏目 ]” */
-  .doc-chrome { text-align: center; }
-  .doc-chrome-bar { justify-content: center !important; gap: 28px !important; border-top: 1px solid var(--fg) !important; border-bottom: 1px solid var(--line, rgba(0,0,0,.2)) !important; padding: 10px 0 !important; }
-  .doc-chrome-rule { display: none !important; }
-  .doc-chrome-meta, .doc-chrome-tags { justify-content: center !important; }
-  .doc-chrome-tags .chrome-tag { background: none !important; border: 0 !important; padding: 0 !important; font-size: 0.7rem !important; letter-spacing: 0.2em !important; color: var(--accent-ink, var(--accent)) !important; border-radius: 0 !important; }
-  .doc-chrome-tags .chrome-tag::before { content: "[\00a0"; } .doc-chrome-tags .chrome-tag::after { content: "\00a0]"; }
-  /* 目录：窄编号列 + 等宽数字，靠留白分组，不画线 */
-  .toc-item { display: grid !important; grid-template-columns: 2.4em 1fr !important; gap: 0 10px !important; border: 0 !important; }
-  .toc-num { font-variant-numeric: tabular-nums; text-align: right; opacity: .7; }
-  @media print { .doc-chrome-bar { border-top-width: 1px !important; } }
-
-  /* ── v0.17 · 报头一行；CJK 不用斜体；章节号两侧对称星 ───────────── */
-  .doc-chrome.doc-line { display: flex !important; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 0 !important;
-    max-width: var(--col); margin: 0 auto !important; padding: 28px 0 12px !important; border: 0 !important; border-bottom: 1px solid var(--line, rgba(0,0,0,.16)) !important;
-    font-family: var(--font-serif); font-size: 13px; letter-spacing: .04em; color: var(--fg-secondary, var(--fg)); text-align: center; }
-  .doc-line .dl-sep { margin: 0 .7em; opacity: .5; }
-  .doc-line .dl-tag { color: var(--accent-ink, var(--accent)); }
-  /* 中文不倾斜（会变成伪斜体）；斜体只给拉丁文 <i>/<em lang=en> 等 */
-  .hero-subtitle, figcaption, .figure-card figcaption, .section-number, .pullquote, .pullquote *, blockquote, blockquote *, .hc-cap, .table-caption, .bq-cite, em, .toc-item { font-style: normal !important; }
-  :lang(en) em, em:lang(en), i:lang(en) { font-style: italic !important; }
-  .section > .section-number.sn-sym { display: flex !important; justify-content: center !important; align-items: center !important; gap: 0 !important; width: 100%; font-variant-numeric: tabular-nums; }
-  .sn-sym .sn-side { flex: 1 1 0; display: inline-flex; align-items: center; gap: 6px; }
-  .sn-sym .sn-l { justify-content: flex-end; } .sn-sym .sn-r { justify-content: flex-start; }
-  .sn-sym .sn-num { flex: none; margin: 0 14px !important; line-height: 1; font-size: 1.05rem; letter-spacing: .12em; padding-left: .12em; /* 抵消末尾字距，光学居中 */ }
-  .sn-sym .sn-star { margin: 0 !important; line-height: 1; display: inline-block; }
-  .section h3, h1, h2, h3, h4, .hero-subtitle, .hero p, .doc-line { font-style: normal !important; }
-  .doc-chrome.doc-line { max-width: min(var(--wide, 920px), 100%) !important; white-space: normal; } .doc-line > span { white-space: nowrap; }
-
-  /* ── v0.18 · 移动端报头：让开目录按钮，换行不挤（≤640px）；桌面不变 ── */
   @media (max-width: 640px) {
     html, body { overflow-x: hidden; }
-    .doc-chrome.doc-line { padding: 68px 4px 12px !important; font-size: 12px; line-height: 1.9; row-gap: 2px; }
+    .container { padding: 0 var(--space-lg); }
+    /* masthead clears the TOC button and wraps cleanly */
+    .doc-chrome.doc-line { padding: 68px 4px 12px !important; font-size: 12px; line-height: 1.9; } /* !important: see desktop rule */
     .doc-line .dl-sep { margin: 0 .5em; }
     .hero h1 { overflow-wrap: anywhere; }
     .section > * { min-width: 0; }
-    .table-wrap { overflow-x: auto; }
+    .gallery-item { width: 220px; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .hc-row { grid-template-columns: 1fr; }
   }
 
-  /* v0.19 链接/长串不两端对齐：含链接的段落、列表项、来源/参考节一律起始对齐；长 URL / 代码可任意断行，避免 justify 把冒号前的字拉开 */
-  :lang(zh) .section li,
-  .section > p:has(a.url, a[href^="http"], code),
-  .section.refs p, .section.refs li { text-align: start !important; text-justify: auto; }
-  .section a.url { overflow-wrap: anywhere; word-break: break-word; }
-  .section code { overflow-wrap: anywhere; word-break: break-all; }
-  .section p, .section li { overflow-wrap: break-word; }
-  /* 英文段落仍两端对齐，但开启连字符断词，减少长单词造成的大空隙 */
-  .section > p:lang(en) { hyphens: auto; -webkit-hyphens: auto; }
+  /* ========================================
+     PRINT / PDF
+     Break rules live in ui.css (shared). Never put break-inside:avoid on
+     .section/.hero: a whole chapter that doesn't fit gets pushed to the
+     next page and leaves a half-empty page behind.
+     ======================================== */
+  @media print {
+    body { background: #fff; }
+    .gallery { flex-wrap: wrap; overflow: visible; }
+    .gallery-item { width: 45%; }
+    .img-strip { flex-wrap: wrap; overflow: visible; }
+    .img-strip-hint { display: none; }
+  }
