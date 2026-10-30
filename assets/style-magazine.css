@@ -347,11 +347,15 @@
 
   li::marker { color: var(--accent-ink, var(--accent)); }
 
-  /* Footnote section (英文文档里才生效；中文由 :lang(zh) .section li 决定间距) */
-  .section-footnote li {
-    margin-bottom: var(--space-md);
+  /* Footnote section: smaller, secondary colour. .section.section-footnote matches the
+     specificity of :lang(zh) .section li and comes later, so it also applies to zh docs */
+  .section.section-footnote li {
+    font-size: var(--fs-caption);
+    line-height: 1.7;
+    margin-bottom: var(--space-sm);
     color: var(--fg-secondary);
   }
+  .section.section-footnote > h2 { font-size: var(--fs-subhead); }
 
   .checklist {
     list-style: none;
@@ -396,11 +400,11 @@
     color: var(--fg);
   }
 
-  /* Paragraphs set their own serif face, so the kai face above only reaches the citation's dash */
+  /* Quote text is kai (LXGW WenKai / system kai, serif fallback) at body size */
   blockquote p {
-    font-family: var(--font-serif);
-    font-size: 0.98rem;
-    line-height: 1.8;
+    font-family: var(--font-kai);
+    font-size: inherit;
+    line-height: inherit;
     color: var(--fg);
     margin-bottom: 0;
   }
@@ -1096,6 +1100,7 @@
      FOOTER
      ======================================== */
   .divider-dot {
+    display: block;                 /* not a grid: the dots are one centred line */
     margin: var(--space-2xl) auto;
     width: 100%;
     text-align: center;
@@ -1140,7 +1145,8 @@
     /* masthead clears the TOC button and wraps cleanly */
     .doc-chrome.doc-line { padding: 68px 4px 12px !important; font-size: 12px; line-height: 1.9; } /* !important: see desktop rule */
     .doc-line .dl-sep { margin: 0 .5em; }
-    .hero h1 { overflow-wrap: anywhere; }
+    .hero h1 { font-size: 1.8rem; overflow-wrap: anywhere; }
+    .pullquote p { font-size: 1.15rem; }
     .section > * { min-width: 0; }
     .gallery-item { width: 220px; }
     .summary-grid { grid-template-columns: 1fr; }

@@ -315,8 +315,8 @@
     transform: rotate(-45deg);
   }
 
-  /* Footnote section (zh: the :lang(zh) .section li size/margin win) */
-  .section-footnote li {
+  /* Footnote section: .section.section-footnote matches :lang(zh) .section li and comes later */
+  .section.section-footnote li {
     font-size: 0.8rem;
     margin-bottom: var(--sp-5);
     color: var(--fg-secondary);
@@ -620,7 +620,6 @@
   figcaption .cap-lead { display: block; font-weight: 600; color: var(--fg); margin-bottom: 2px; }
   .img-row figcaption .cap-lead, .img-strip figcaption .cap-lead { display: inline; margin-right: .4em; }
 
-  /* grid-column also makes cards inside .img-row span the whole row */
   .figure-card { grid-column: 1 / -1; margin: var(--sp-8) 0; }
   .figure-card img { object-fit: cover; }
   .figure-card figcaption { padding: 0 var(--sp-3); }
@@ -637,7 +636,7 @@
   .img-row-2 { grid-template-columns: 1fr 1fr; }
   .img-row-3 { grid-template-columns: 1fr 1fr 1fr; }
   .img-row .figure-card { margin: 0; }
-  .img-row > .figure-card { min-width: 0; }
+  .img-row > .figure-card { min-width: 0; grid-column: auto; }  /* side by side, not one full-width card per row */
   .img-row .figure-card img { aspect-ratio: 4 / 3; object-fit: cover; }
 
   .img-strip-wrap { margin-top: 2.2em; margin-bottom: 2.2em; }
@@ -816,6 +815,7 @@
     .hero-cover .hero-subtitle { font-size: .95rem; line-height: 1.7; color: rgba(var(--paper-rgb), .78); }
     .hero-cover .hero-kicker { margin-bottom: 12px; }
     .section-header .section-number { font-size: 24px; }
+    .pullquote-swiss .pq-content p { font-size: 1.2rem; }
     .hc-row { grid-template-columns: 1fr; }
   }
 
