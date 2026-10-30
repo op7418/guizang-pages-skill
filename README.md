@@ -52,8 +52,10 @@ Markdown 原文 ──→ annotations.json ──→ render.mjs ──→ output
 
 | 风格 | 美学锚点 | 特征 |
 |------|----------|------|
-| 杂志风 `magazine` | Monocle × 复印件 | 衬线标题、暖灰底、赤褐色强调色、细线分隔 |
-| 瑞士风 `swiss` | Helvetica Forever | 无衬线细体、冷灰底、克莱因蓝、卡片语言、直角、左侧目录 |
+| 杂志风 `magazine` | Monocle × 复印件 | 衬线标题、米白纸色、墨色为主、细线分隔 |
+| 瑞士风 `swiss` | Helvetica Forever | 无衬线细体、冷灰底、单一锚点色、卡片语言、直角、左侧目录 |
+
+配色和 [PPT](https://github.com/op7418/guizang-ppt-skill)、[图文卡片](https://github.com/op7418/guizang-social-card-skill) skill 共用同一套主题：杂志风 6 套（含深色午夜墨），瑞士风 4 套，见 [`references/themes.md`](references/themes.md)。用户给了品牌色时，渲染器按色彩科学把它收进风格允许的范围，生成受约束的品牌主题，不直接用原色。读者可以在页面右下角切换配色和字体。
 
 ## 两种模式
 
@@ -86,10 +88,10 @@ npx skills add https://github.com/op7418/guizang-pages-skill --skill guizang-pag
 git clone https://github.com/op7418/guizang-pages-skill.git ~/.claude/skills/guizang-page-skill
 ```
 
-渲染需要 Node.js 18 或更高版本。导出 PDF 和长图还要装 Chrome 或 Chromium，以及 `puppeteer-core`：
+渲染需要 Node.js 18 或更高版本，不需要装依赖。把字体内置进页面（`--embed`）、导出 PDF 和长图时，先在 skill 目录装一次依赖；导出还需要本机有 Chrome 或 Chromium：
 
 ```bash
-cd ~/.claude/skills/guizang-page-skill && npm i puppeteer-core
+cd ~/.claude/skills/guizang-page-skill && npm install
 ```
 
 ## 使用
@@ -99,8 +101,9 @@ cd ~/.claude/skills/guizang-page-skill && npm i puppeteer-core
 也可以直接运行脚本：
 
 ```bash
-# 渲染
+# 渲染（--theme 选配色，--brand 用品牌色，--embed 内置字体）
 node scripts/render.mjs input.md annotations.json output.html --style swiss
+node scripts/render.mjs input.md annotations.json output.html --style magazine --theme forest-ink --embed
 
 # 导出 PDF（A4）和全页长图
 node scripts/export.mjs output.html --pdf output.pdf
@@ -121,7 +124,7 @@ node scripts/export.mjs output.html --png output.png --width 1440
 SKILL.md              Agent 使用说明（工作流、标注格式、注意事项）
 scripts/render.mjs    Markdown + 标注 → 单文件 HTML
 scripts/export.mjs    HTML → PDF / 长图
-assets/               两套风格 CSS、配色主题、页面设置面板
+assets/               设计系统样式（gz-*.css，生成）、两套风格 CSS、配色与字体选项（themes.json，生成）、页面设置面板
 references/           组件参考、设计规则、中文排版研究
 doc/                  产品文档、交接说明、已知问题
 ```
@@ -129,6 +132,8 @@ doc/                  产品文档、交接说明、已知问题
 ## 贡献
 
 排版问题、新组件需求，欢迎开 Issue 或 PR。新增设计规则请同步写进 `references/design-rules.md`，已知问题记录在 `doc/known-issues.md`。
+
+主题、字号角色、字体和间距来自共享设计系统：`assets/gz-*.css`、`assets/themes.json`、`references/themes.md`、`references/gz-components.md` 和 `scripts/gz-*.mjs` 是生成的，不要手改；新主题色或字号调整请提 Issue。`assets/style-*.css` 只写版式，颜色用语义变量，不写颜色值。
 
 ## License
 

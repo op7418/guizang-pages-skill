@@ -64,17 +64,12 @@
 ## 杂志风 (Magazine) 专有规则
 
 ### 色彩
-```
---fg: #1a1a1a          近黑
---bg: #f6f4f0          暖灰白
---accent: #c45a3c      赤褐
---bg-card: #edeae4     暖灰
-```
+6 套主题（墨水经典默认，含深色午夜墨），与 PPT、图文卡片相同，见 `references/themes.md`。纸色、文字层级、线条和强调色都来自设计系统，样式表里不写颜色值。
 
 ### 字体
-- 标题：Noto Serif SC, 700
-- 正文：Inter, 400
-- 元信息：JetBrains Mono
+- 标题与正文：衬线，西文 Source Serif 4 在前、中文 Noto Serif SC 在后（设置面板可换西文字形）
+- 界面文字、表头：Inter + Noto Sans SC
+- 元信息：IBM Plex Mono（与 PPT、卡片的杂志风一致）
 
 ### 组件风格
 - 微圆角 (3px)
@@ -85,13 +80,7 @@
 ## 瑞士风 (Swiss) 专有规则
 
 ### 色彩
-```
---fg: #0a0a0a          近黑
---bg: #fafaf8          冷灰白
---accent: #002FA7      克莱因蓝 (IKB)
---accent-bright: #5B7BFF  暗底高亮版
---bg-card: #f0f0ee     冷灰
-```
+纸色 `#fafaf8` 和灰阶在所有主题下不变，只换锚点色：克莱因蓝（默认）、柠檬黄、柠檬绿、安全橙，见 `references/themes.md`。强调色当小字时用加深后的 `--accent-ink`（柠檬黄 → 深金），色块上的文字用 `--accent-on`。
 
 ### 字体
 - 标题：Inter, weight 200–300（极细体）

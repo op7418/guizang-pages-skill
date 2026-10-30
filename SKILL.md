@@ -22,8 +22,10 @@ Markdown 原文 ──→ annotations.json ──→ render.mjs ──→ output
 
 | 风格 | 美学锚点 | 特征 |
 |------|----------|------|
-| **杂志风 (Magazine)** | Monocle × 复印件 | 衬线标题、暖灰底 `#f6f4f0`、赤褐色 accent `#c45a3c`、交叉线纹理、微圆角 |
-| **瑞士风 (Swiss)** | Helvetica Forever | 无衬线极细体、冷灰底 `#fafaf8`、克莱因蓝 `#002FA7`、卡片语言、直角、网格点阵 |
+| **杂志风 (Magazine)** | Monocle × 复印件 | 衬线标题、米白纸色、墨色为主（默认墨水经典）、交叉线纹理、微圆角 |
+| **瑞士风 (Swiss)** | Helvetica Forever | 无衬线极细体、冷灰底、单一锚点色（默认克莱因蓝）、卡片语言、直角、网格点阵 |
+
+两种风格的配色与 PPT、图文卡片 skill 是同一套主题（杂志风 6 套、瑞士风 4 套），见 `references/themes.md`。
 
 ### 两种模式
 
@@ -46,6 +48,7 @@ Markdown 原文 ──→ annotations.json ──→ render.mjs ──→ output
 2. **哪种模式？** 忠实（保留原文）/ 解释（增加可视化）
 3. **什么语言？** 如果是双语文档，选主语言（zh / en）
 4. **有没有特定配图需求？** 默认从 Unsplash 取通用高质量图
+5. **配色？** 不问也可以，用默认主题；内容有明确调性时从 `references/themes.md` 选一套；用户给了品牌色或 logo 主色就用 `--brand`
 
 ### Step 2 · 分析文档，生成 annotations.json
 
@@ -118,16 +121,20 @@ Markdown 原文 ──→ annotations.json ──→ render.mjs ──→ output
 ### Step 3 · 运行渲染脚本
 
 ```bash
-node scripts/render.mjs <input.md> <annotations.json> <output.html> --style swiss|magazine
+node scripts/render.mjs <input.md> <annotations.json> <output.html> --style swiss|magazine [--theme <id>] [--brand "#hex"] [--embed]
 ```
+
+- `--theme`：初始配色，id 见 `references/themes.md`（也可写 `meta.theme`）
+- `--brand`：用户的品牌色，生成受约束的品牌主题（也可写 `meta.brand`）；终端会打印调整了什么，不达标时退回预设
+- `--embed`：把页面用到的字体子集化内置进 HTML。页面要离线看、要发给国内网络打不开 Google Fonts 的人、或要导出 PDF / 长图时用；首次使用先在 skill 目录 `npm install`。不加时字体走在线链接，文件约 120KB
 
 脚本自动：
 1. 读取 markdown + annotations
 2. 按行匹配升格标注
 3. 未标注的行走默认 prose 渲染
-4. 内联 CSS（从 `assets/style-*.css`）
-5. 生成单文件 HTML（无外部依赖，除 Google Fonts CDN）
-6. Swiss 模式自动加 TOC 侧边栏 + scroll spy
+4. 内联 CSS：设计系统（`assets/gz-<风格>.css`：主题、字号角色、间距）+ 风格版式（`assets/style-<风格>.css`）+ 设置面板
+5. 生成单文件 HTML（默认只依赖在线字体；`--embed` 后无外部依赖）
+6. 自动加 TOC 侧边栏 + scroll spy
 
 ### Step 4 · 在浏览器中打开验证
 
@@ -146,12 +153,12 @@ open output.html
 
 ### Step 5 · 导出 PDF / 长图（模型执行，页面里没有导出按钮）
 
-用户要 PDF 或长图时，由模型运行导出脚本（依赖 Chrome + `puppeteer-core`，首次在 skill 目录 `npm i puppeteer-core`；Chrome 路径可用 `CHROME_PATH` 指定）：
+用户要 PDF 或长图时，由模型运行导出脚本（依赖 Chrome + `puppeteer-core`，首次在 skill 目录 `npm install`；Chrome 路径可用 `CHROME_PATH` 指定）：
 
 ```bash
 node scripts/export.mjs output.html --pdf output.pdf                 # A4，走页面的 print CSS（空白预算 ≤25%/页）
 node scripts/export.mjs output.html --png output.png --width 1440    # 全页长图，默认 2x 像素
-node scripts/export.mjs output.html --pdf a.pdf --png a.png --color 3 --font 0   # 指定配色/字体（序号或名称）
+node scripts/export.mjs output.html --pdf a.pdf --png a.png --color forest-ink --font 0   # 指定配色/字体（主题 id、序号或名称）
 ```
 
 脚本会先把懒加载图片改为立即加载并滚动全页、等待所有图片与 `document.fonts.ready`，长图隐藏设置按钮和目录。导出后检查：图片无缺失（脚本会打印失败的图片）、PDF 页数合理、无大片空白页。交付时附上导出文件。

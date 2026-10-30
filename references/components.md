@@ -180,11 +180,9 @@ AI 提炼的实践建议、参数速查、工程提示。
 | Magazine | 上方 1px 浅色分割线 + 小字 0.8rem + 次级灰色 + 加粗标题保持主色 |
 | Swiss | 上方 1px `--bg-card` 分割线 + 小字 0.8rem + muted 灰色 |
 
-### chart (Chart.js)
+### chart（原生条形图）
 
-通过 annotations 中的 `chart` 类型触发。从 CDN 加载 Chart.js 4.x。
-
-配色跟主题走：accent 为主色，`--bg-card` 为网格线色，字体用 Inter。
+在 Markdown 里写 ` ```chart ` 代码块触发，纯 HTML/CSS，不加载外部脚本，可导出 PDF / 长图。格式见 SKILL.md「自动渲染的元素」。配色跟主题走：高亮项用强调色，其余为墨色浅灰。
 
 ## 布局
 

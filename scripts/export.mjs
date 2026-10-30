@@ -11,7 +11,8 @@
  * - Before capturing: lazy images are made eager and scrolled into view, all <img> are awaited,
  *   document.fonts.ready is awaited, UI chrome (settings button, TOC) is hidden.
  * - --color / --font pick a colour theme / font from the page's own settings panel
- *   (0-based index, or a case-insensitive substring of the swatch/font name).
+ *   (0-based index, or a case-insensitive substring of the theme id such as forest-ink,
+ *   the swatch name or the font name).
  * Needs Chrome/Chromium + puppeteer or puppeteer-core (npm i puppeteer-core in the skill dir,
  * or anywhere on NODE_PATH). Chrome path: $CHROME_PATH or common install locations.
  */
@@ -67,7 +68,7 @@ async function pick(selector, val) {
   if (val === undefined || val === true) return;
   const ok = await page.evaluate((sel, v) => {
     const els = [...document.querySelectorAll(sel)];
-    const el = /^\d+$/.test(v) ? els[+v] : els.find(e => ((e.title || '') + ' ' + e.textContent).toLowerCase().includes(String(v).toLowerCase()));
+    const el = /^\d+$/.test(v) ? els[+v] : els.find(e => ((e.dataset.themeId || '') + ' ' + (e.title || '') + ' ' + e.textContent).toLowerCase().includes(String(v).toLowerCase()));
     if (!el) return false; el.click(); return true;
   }, selector, String(val));
   if (!ok) console.warn(`! no match for ${selector} = ${val}`);

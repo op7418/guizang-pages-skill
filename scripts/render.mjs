@@ -815,7 +815,7 @@ const uiMarkup = `
   <div class="hf-dropdown" id="hf-settings-dropdown">
     <div class="hf-dropdown-label">配色</div>
     <div class="hf-swatches">${colors.map(c =>
-      `<button type="button" class="hf-swatch${c.id === themeId ? ' active' : ''}" data-theme-id="${c.id}" data-scheme="${c.scheme}" style="background:linear-gradient(135deg,${c.paper} 0 50%,${c.accent} 50% 100%)" title="${attr(c.name)}" aria-label="${attr(c.name)}"></button>`).join('')}</div>
+      `<button type="button" class="hf-swatch${c.id === themeId ? ' active' : ''}" data-theme-id="${c.id}" data-scheme="${c.scheme}" style="background:linear-gradient(135deg,${c.paper} 0 50%,${c.accent} 50% 100%)" title="${attr(`${c.name} ${c.en}`)}" aria-label="${attr(c.name)}"></button>`).join('')}</div>
     <div class="hf-dropdown-divider"></div>
     <div class="hf-dropdown-label">字体</div>
     <div class="hf-font-options">${theme.fonts.map((f, i) =>
