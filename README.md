@@ -1,10 +1,41 @@
-# 归藏 Page Skill
+# Guizang Page Skill · 网页排版 / 精排阅读页
 
-把 Markdown 文档、文章或笔记排成**精排单页 HTML**，也可以导出 PDF 和长图。
+![GitHub stars](https://img.shields.io/github/stars/op7418/guizang-pages-skill?style=flat-square)
+![License](https://img.shields.io/github/license/op7418/guizang-pages-skill?style=flat-square)
+![Skill](https://img.shields.io/badge/Skill-Agent-111111?style=flat-square)
+![HTML Page](https://img.shields.io/badge/HTML-Page-0A7CFF?style=flat-square)
+![Claude Code](https://img.shields.io/badge/Claude%20Code-Supported-6B5B95?style=flat-square)
+![Codex](https://img.shields.io/badge/Codex-Supported-222222?style=flat-square)
 
-> PPT Skill 做演示，Page Skill 做阅读。
+一个适配 Claude Code、Codex 等 Agent 环境的排版 Skill，能把 Markdown 文档、文章或笔记排成**精排单页 HTML**，也可以导出 PDF 和长图。
 
-由 [歸藏](https://x.com/op7418) 创建与维护。
+> PPT Skill 做演示，Page Skill 做阅读。由 [歸藏](https://x.com/op7418) 创建与维护。
+
+## 30 秒开始
+
+```bash
+npx skills add https://github.com/op7418/guizang-pages-skill --skill guizang-page-skill
+```
+
+也可以直接把这段话发给有 shell 权限的 AI Agent：
+
+```text
+帮我安装 guizang-page-skill。请把 https://github.com/op7418/guizang-pages-skill 克隆到 ~/.claude/skills/guizang-page-skill，安装完成后检查 SKILL.md、assets/、scripts/、references/ 是否存在。
+```
+
+已经安装过的话，用这段话更新：
+
+```text
+帮我更新 guizang-page-skill。请进入 ~/.claude/skills/guizang-page-skill 执行 git pull，然后告诉我当前最新 commit。
+```
+
+装好后可以直接对 Agent 说：
+
+```text
+帮我把这篇文章排成杂志风网页，忠实模式，保留原文。
+把这份 Markdown 笔记做成瑞士风页面，用解释模式加配图和速查卡。
+把这个页面导出成 PDF 和 1440 宽的长图。
+```
 
 ## 工作原理
 
@@ -43,7 +74,13 @@ Markdown 原文 ──→ annotations.json ──→ render.mjs ──→ output
 
 ## 安装
 
-把这个仓库放进你所用 Agent 的 skills 目录，比如 Claude Code：
+### 方式一：一行命令安装（推荐）
+
+```bash
+npx skills add https://github.com/op7418/guizang-pages-skill --skill guizang-page-skill
+```
+
+### 方式二：手动命令行
 
 ```bash
 git clone https://github.com/op7418/guizang-pages-skill.git ~/.claude/skills/guizang-page-skill
@@ -88,3 +125,11 @@ assets/               两套风格 CSS、配色主题、页面设置面板
 references/           组件参考、设计规则、中文排版研究
 doc/                  产品文档、交接说明、已知问题
 ```
+
+## 贡献
+
+排版问题、新组件需求，欢迎开 Issue 或 PR。新增设计规则请同步写进 `references/design-rules.md`，已知问题记录在 `doc/known-issues.md`。
+
+## License
+
+AGPL-3.0 © 2026 [op7418](https://github.com/op7418)
