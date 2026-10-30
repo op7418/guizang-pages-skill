@@ -7,22 +7,34 @@
  * where standard prose is "upgraded" to richer visual components.
  *
  * Usage: node render.mjs <input.md> <annotations.json> <output.html> [--style swiss|magazine]
+ *          [--theme <主题 id>] [--brand <#hex>] [--embed]
+ *
+ *   --theme  初始配色（themes.json 里的 id），也可写在 meta.theme；默认是该风格的默认主题
+ *   --brand  用户的品牌色，也可写在 meta.brand；经 gz-theme.mjs 收进风格允许的范围后作为初始配色
+ *   --embed  把页面用到的字体子集化内置进 HTML（离线可看、导出稳定）；默认用在线字体链接
  */
 
 import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { execFileSync } from 'child_process';
 import { fileURLToPath } from 'url';
 import { resolve, dirname } from 'path';
+import { embedFonts, fontLinkTag } from './gz-fonts.mjs';
 
 const args = process.argv.slice(2);
-const styleIdx = args.indexOf('--style');
-let styleName = 'magazine';
-if (styleIdx !== -1) {
-  styleName = args[styleIdx + 1] || 'magazine';
-  args.splice(styleIdx, 2);
+function takeFlag(name, withValue = true) {
+  const i = args.indexOf(name);
+  if (i === -1) return null;
+  const v = withValue ? args[i + 1] : true;
+  args.splice(i, withValue ? 2 : 1);
+  return v;
 }
+const styleName = takeFlag('--style') || 'magazine';
+const themeArg = takeFlag('--theme');
+const brandArg = takeFlag('--brand');
+const embed = takeFlag('--embed', false);
 const [mdPath, annoPath, outPath] = args;
 if (!mdPath || !annoPath || !outPath) {
-  console.error('Usage: node render.mjs <input.md> <annotations.json> <output.html> [--style swiss|magazine]');
+  console.error('Usage: node render.mjs <input.md> <annotations.json> <output.html> [--style swiss|magazine] [--theme id] [--brand #hex] [--embed]');
   process.exit(1);
 }
 
@@ -755,17 +767,41 @@ bodyHtml += `
 const scriptDir = import.meta.dirname || dirname(fileURLToPath(import.meta.url));
 let assetsDir = resolve(scriptDir, '..', 'assets');
 if (!existsSync(assetsDir)) assetsDir = scriptDir;
-const cssFile = styleName === 'swiss' ? 'style-swiss.css' : 'style-magazine.css';
-const css = readFileSync(resolve(assetsDir, cssFile), 'utf-8');
+const family = styleName === 'swiss' ? 'swiss' : 'magazine';
 function readAsset(name) {
   const p = resolve(assetsDir, name);
   if (!existsSync(p)) { console.error(`✗ missing asset: ${p}`); process.exit(1); }
   return readFileSync(p, 'utf-8');
 }
+// 设计系统（主题、字号角色、间距、共享组件）在前，风格自己的版式在后，设置面板 ui.css 最后
+const gzCss = readAsset(`gz-${family}.css`);
+const css = readAsset(`style-${family}.css`);
 const uiCss = readAsset('ui.css');
 const uiJs = readAsset('ui.js');
 const themes = JSON.parse(readAsset('themes.json'));
-const theme = themes[styleName] || themes.swiss;
+const theme = themes[family];
+
+// 初始配色：品牌色 > 指定主题 > 默认主题。品牌色不直接用，经 gz-theme.mjs 约束成一套完整主题
+const brand = brandArg || meta.brand;
+let brandCss = '';
+let colors = theme.colors;
+let themeId = themeArg || meta.theme || theme.default;
+if (brand) {
+  try {
+    brandCss = execFileSync(process.execPath, [resolve(scriptDir, 'gz-theme.mjs'), 'brand', brand, '--family', family], { encoding: 'utf-8' }).trim();
+    const v = (k) => (brandCss.match(new RegExp(`${k}:(#[0-9a-f]{6})`, 'i')) || [])[1];
+    colors = [{ id: 'brand', name: '品牌色', en: 'Brand', scheme: 'light', paper: v('--paper'), ink: v('--ink'), accent: v('--accent') }, ...colors];
+    themeId = 'brand';
+    console.log(brandCss.split('\n')[0]);
+  } catch (e) {
+    console.warn(`品牌色 ${brand} 无法生成主题，改用预设：${(e.stderr || e.message).toString().trim()}`);
+  }
+}
+if (!colors.some(c => c.id === themeId)) {
+  console.warn(`没有主题 ${themeId}，改用默认主题 ${theme.default}`);
+  themeId = theme.default;
+}
+const themeScheme = colors.find(c => c.id === themeId).scheme;
 
 // Static UI markup (settings FAB only — export lives in scripts/export.mjs). Rendered into the HTML itself so the
 // controls exist even before/without JS; ui.js only wires up behaviour.
@@ -778,76 +814,17 @@ const uiMarkup = `
   <button class="hf-fab-btn" id="hf-settings-toggle" type="button" title="设置" aria-haspopup="true">${ICON.sliders}</button>
   <div class="hf-dropdown" id="hf-settings-dropdown">
     <div class="hf-dropdown-label">配色</div>
-    <div class="hf-swatches">${theme.colors.map((c, i) =>
-      `<button type="button" class="hf-swatch${i === 0 ? ' active' : ''}" data-accent="${c.accent}" data-accent-bright="${c.accentBright || ''}" data-accent-on="${c.accentOn || '#ffffff'}" data-vars="${attr(JSON.stringify(c.vars || {}))}" data-scheme="${c.scheme || 'light'}" style="background:${c.swatch || c.accent}" title="${attr(c.name)}" aria-label="${attr(c.name)}"></button>`).join('')}</div>
+    <div class="hf-swatches">${colors.map(c =>
+      `<button type="button" class="hf-swatch${c.id === themeId ? ' active' : ''}" data-theme-id="${c.id}" data-scheme="${c.scheme}" style="background:linear-gradient(135deg,${c.paper} 0 50%,${c.accent} 50% 100%)" title="${attr(c.name)}" aria-label="${attr(c.name)}"></button>`).join('')}</div>
     <div class="hf-dropdown-divider"></div>
     <div class="hf-dropdown-label">字体</div>
     <div class="hf-font-options">${theme.fonts.map((f, i) =>
-      `<button type="button" class="hf-font-option${i === 0 ? ' active' : ''}" data-var="${theme.fontVar}" data-family="${attr(f.family)}" data-google="${attr(f.google || '')}"><span class="font-preview" style="font-family:${attr(f.family)}">${styleName === 'magazine' ? '衬线 Aa' : '黑体 Aa'}</span><span class="font-name">${attr(f.name)}</span></button>`).join('')}</div>
+      `<button type="button" class="hf-font-option${i === 0 ? ' active' : ''}" data-vars="${theme.fontVars.join(' ')}" data-family="${attr(f.family)}" data-href="${attr(f.href || '')}"><span class="font-preview" style="font-family:${attr(f.family)}">${theme.preview}</span><span class="font-name">${attr(f.name)}</span></button>`).join('')}</div>
   </div>
 </div>`;
 
-const fontsHref = styleName === 'swiss'
-  ? 'https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&family=Noto+Sans+SC:wght@200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap'
-  : 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap';
-
-const chartScript = isSwiss ? `
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
-<script>
-function initCharts() {
-  const accent = '${anno.meta.accent || '#002FA7'}';
-  const grey = '#d4d4d2';
-  const fg = '#0a0a0a';
-  const defaults = Chart.defaults;
-  defaults.font.family = "'Inter','Helvetica Neue',sans-serif";
-  defaults.font.size = 12;
-  defaults.color = '#737373';
-  defaults.plugins.legend.display = false;
-  defaults.animation.duration = 900;
-  defaults.animation.easing = 'easeOutQuart';
-  defaults.scale.grid = { color: '#f0f0ee', lineWidth: 1 };
-  defaults.scale.border = { display: false };
-
-  const barEl = document.getElementById('chart-bar');
-  if (barEl) new Chart(barEl, {
-    type: 'bar',
-    data: {
-      labels: ['设计类','写作类','开发类','视频类','行业类','硬件类'],
-      datasets: [{
-        data: [2400, 1800, 3100, 900, 1500, 600],
-        backgroundColor: [accent, grey, accent, grey, accent, grey],
-        borderRadius: 0, maxBarThickness: 48
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: { y: { beginAtZero: true, ticks: { stepSize: 1000 } }, x: { grid: { display: false } } }
-    }
-  });
-
-  const lineEl = document.getElementById('chart-line');
-  if (lineEl) new Chart(lineEl, {
-    type: 'line',
-    data: {
-      labels: ['1月','2月','3月','4月','5月','6月'],
-      datasets: [{
-        data: [82, 85, 88, 91, 93, 94],
-        borderColor: accent, borderWidth: 2,
-        pointBackgroundColor: accent, pointRadius: 4, pointHoverRadius: 6,
-        fill: true,
-        backgroundColor: accent + '12',
-        tension: 0.3
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      scales: { y: { min: 75, max: 100, ticks: { callback: v => v+'%' } }, x: { grid: { display: false } } }
-    }
-  });
-}
-if (typeof Chart !== 'undefined') initCharts();
-else document.querySelector('script[src*="chart.js"]').onload = initCharts;
-</script>` : '';
+// 字体：在线链接（带 data-gz-fonts，--embed 时按页面用字子集化内置）
+const fontsTag = await fontLinkTag(theme.fontIds);
 
 // Build TOC HTML
 const tocHtml = tocItems.map(t =>
@@ -940,28 +917,40 @@ function autospace(html) {
 if (docLang.startsWith('zh') && anno.meta.autospace !== false) bodyHtml = autospace(bodyHtml);
 
 const fullHtml = `<!DOCTYPE html>
-<html lang="${docLang}" data-hf-style="${styleName}">
+<html lang="${docLang}" data-hf-style="${styleName}" data-family="${family}" data-medium="page" data-theme="${themeId}" data-scheme="${themeScheme}" style="color-scheme:${themeScheme}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escHtml(meta.title)}</title>
+<style>${gzCss}</style>${brandCss ? `\n<style data-gz-brand>${brandCss}</style>` : ''}
 <style>${css}</style>
 <style>${uiCss}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="${fontsHref}" rel="stylesheet">
+${fontsTag}
 </head>
 <body>
 ${tocSidebar}
 <div class="container">
 ${bodyHtml}
 </div>
-${chartScript}
 ${tocScript}
 ${uiMarkup}
 <script>${uiJs}</script>
 </body>
 </html>`;
 
-writeFileSync(resolve(outPath), fullHtml, 'utf-8');
+let outHtml = fullHtml;
+if (embed) {
+  try {
+    const r = await embedFonts(fullHtml, { log: (m) => console.log('  ' + m) });
+    outHtml = r.html;
+    if (r.report.length) console.log(`字体内置：${[...new Set(r.report.map((f) => f.id))].join('、')}，合计 ${(r.report.reduce((n, f) => n + f.bytes, 0) / 1024).toFixed(0)}KB`);
+  } catch (e) {
+    console.warn(e.code === 'ERR_MODULE_NOT_FOUND'
+      ? '字体内置需要先在 skill 目录运行一次 npm install；这次保留在线字体'
+      : `字体内置失败，保留在线字体：${e.message}`);
+  }
+}
+writeFileSync(resolve(outPath), outHtml, 'utf-8');
 console.log(`✓ Rendered ${sections.length} sections → ${outPath}`);

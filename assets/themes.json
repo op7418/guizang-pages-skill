@@ -1,157 +1,163 @@
 {
-  "swiss": {
+  "$comment": "guizang-design 生成，不要手改。colors 切 <html data-theme>，主题的色值在 assets/gz-<家族>.css 里；fonts 只换西文字形",
+  "magazine": {
+    "default": "ink-classic",
+    "fontIds": [
+      "playfair-display",
+      "noto-serif-sc",
+      "source-serif-4",
+      "noto-sans-sc",
+      "ibm-plex-mono"
+    ],
     "colors": [
       {
-        "name": "IKB Blue",
-        "accent": "#002FA7",
-        "accentBright": "#5B7BFF",
-        "accentOn": "#ffffff",
-        "vars": {
-          "--bg": "#f4f6fb",
-          "--bg-card": "#e6ebf6",
-          "--accent-ink": "#002FA7",
-          "--hl-bg": "#002FA7",
-          "--hl-fg": "#ffffff",
-          "--hl-label": "rgba(255,255,255,0.6)",
-          "--accent-deep": "#001d6b"
-        }
+        "id": "ink-classic",
+        "name": "墨水经典",
+        "en": "Ink Classic",
+        "scheme": "light",
+        "paper": "#f1efea",
+        "ink": "#0a0a0b",
+        "accent": "#111111"
       },
       {
-        "name": "Cadmium Yellow",
-        "accent": "#FFD500",
-        "accentBright": "#FFE34D",
-        "accentOn": "#0a0a0a",
-        "vars": {
-          "--bg": "#faf8f1",
-          "--bg-card": "#f1ede0",
-          "--accent-ink": "#7a5f00",
-          "--hl-bg": "#FFD500",
-          "--hl-fg": "#0a0a0a",
-          "--hl-label": "rgba(10,10,10,0.6)",
-          "--accent-deep": "#5e4900"
-        }
+        "id": "indigo-porcelain",
+        "name": "靛蓝瓷",
+        "en": "Indigo Porcelain",
+        "scheme": "light",
+        "paper": "#f1f3f5",
+        "ink": "#0a1f3d",
+        "accent": "#315d93"
       },
       {
-        "name": "Safety Orange",
-        "accent": "#FF6B35",
-        "accentBright": "#FF9A6C",
-        "accentOn": "#ffffff",
-        "vars": {
-          "--bg": "#fcf6f2",
-          "--bg-card": "#f6e9e1",
-          "--accent-ink": "#c2410c",
-          "--hl-bg": "#FF6B35",
-          "--hl-fg": "#0a0a0a",
-          "--hl-label": "rgba(10,10,10,0.6)",
-          "--accent-deep": "#9a3409"
-        }
+        "id": "forest-ink",
+        "name": "森林墨",
+        "en": "Forest Ink",
+        "scheme": "light",
+        "paper": "#f5f1e8",
+        "ink": "#1a2e1f",
+        "accent": "#2e6b4f"
       },
       {
-        "name": "Highlighter Green",
-        "accent": "#C5E803",
-        "accentBright": "#D4F040",
-        "accentOn": "#0a0a0a",
-        "vars": {
-          "--bg": "#f6f8ee",
-          "--bg-card": "#eaefd8",
-          "--accent-ink": "#4a6400",
-          "--hl-bg": "#C5E803",
-          "--hl-fg": "#0a0a0a",
-          "--hl-label": "rgba(10,10,10,0.6)",
-          "--accent-deep": "#3a5000"
-        }
+        "id": "kraft-paper",
+        "name": "牛皮纸",
+        "en": "Kraft Paper",
+        "scheme": "light",
+        "paper": "#eedfc7",
+        "ink": "#2a1e13",
+        "accent": "#9b5a2e"
+      },
+      {
+        "id": "dune",
+        "name": "沙丘",
+        "en": "Dune",
+        "scheme": "light",
+        "paper": "#f0e6d2",
+        "ink": "#1f1a14",
+        "accent": "#8f7650"
+      },
+      {
+        "id": "midnight-ink",
+        "name": "午夜墨",
+        "en": "Midnight Ink",
+        "scheme": "dark",
+        "paper": "#0e0d0c",
+        "ink": "#ece2cf",
+        "accent": "#d4a04a"
       }
     ],
-    "fontVar": "--font-sans",
+    "fontVars": [
+      "--font-serif"
+    ],
+    "preview": "衬线 Aa",
     "fonts": [
       {
-        "name": "Inter",
-        "family": "'Inter','Helvetica Neue','PingFang SC','Noto Sans SC',sans-serif",
-        "google": "Inter:wght@200;300;400;500;600;700"
+        "id": "source-serif-4",
+        "name": "Source Serif 4",
+        "family": "'Source Serif 4','Noto Serif SC','Source Han Serif SC','Songti SC','STSong',Georgia,serif",
+        "href": "https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,200..900;1,200..900&display=swap"
       },
       {
-        "name": "DM Sans",
-        "family": "'DM Sans','PingFang SC','Noto Sans SC',sans-serif",
-        "google": "DM+Sans:wght@300;400;500;600;700"
+        "id": "noto-serif-sc",
+        "name": "Noto Serif SC",
+        "family": "'Noto Serif SC','Source Han Serif SC','Songti SC','STSong',Georgia,serif",
+        "href": "https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@200..900&display=swap"
       },
       {
-        "name": "Space Grotesk",
-        "family": "'Space Grotesk','PingFang SC','Noto Sans SC',sans-serif",
-        "google": "Space+Grotesk:wght@300;400;500;600;700"
+        "id": "playfair-display",
+        "name": "Playfair Display",
+        "family": "'Playfair Display','Noto Serif SC','Source Han Serif SC','Songti SC','STSong',Georgia,serif",
+        "href": "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
       }
     ]
   },
-  "magazine": {
+  "swiss": {
+    "default": "ikb",
+    "fontIds": [
+      "inter",
+      "noto-sans-sc",
+      "jetbrains-mono"
+    ],
     "colors": [
       {
-        "name": "Terracotta",
-        "accent": "#c45a3c",
-        "accentOn": "#ffffff",
-        "vars": {}
+        "id": "ikb",
+        "name": "克莱因蓝",
+        "en": "IKB",
+        "scheme": "light",
+        "paper": "#fafaf8",
+        "ink": "#0a0a0a",
+        "accent": "#002FA7"
       },
       {
-        "name": "Forest",
-        "accent": "#3d6b4f",
-        "accentOn": "#ffffff",
-        "vars": {
-          "--bg": "#eff3ee",
-          "--bg-card": "#e2e9e0",
-          "--bg-quote": "#d9e2d6",
-          "--border": "#c3cfc0",
-          "--border-light": "#d6dfd3",
-          "--accent-ink": "#3d6b4f"
-        }
+        "id": "lemon",
+        "name": "柠檬黄",
+        "en": "Lemon",
+        "scheme": "light",
+        "paper": "#fafaf8",
+        "ink": "#0a0a0a",
+        "accent": "#FFD500"
       },
       {
-        "name": "Indigo",
-        "accent": "#3f4d8c",
-        "accentOn": "#ffffff",
-        "vars": {
-          "--bg": "#f0f1f7",
-          "--bg-card": "#e3e5f0",
-          "--bg-quote": "#d9dcea",
-          "--border": "#c4c8db",
-          "--border-light": "#d8dbe8",
-          "--accent-ink": "#3f4d8c"
-        }
+        "id": "lemon-green",
+        "name": "柠檬绿",
+        "en": "Lemon Green",
+        "scheme": "light",
+        "paper": "#fafaf8",
+        "ink": "#0a0a0a",
+        "accent": "#C5E803"
       },
       {
-        "name": "Charcoal (Dark)",
-        "accent": "#d9a05b",
-        "accentOn": "#1b1b1d",
-        "scheme": "dark",
-        "vars": {
-          "--bg": "#1b1b1d",
-          "--bg-card": "#26262a",
-          "--bg-quote": "#2d2d32",
-          "--fg": "#e9e6df",
-          "--fg-secondary": "#bdb9b0",
-          "--fg-tertiary": "#8f8b83",
-          "--bg-highlight": "#e9e6df",
-          "--fg-highlight": "#1b1b1d",
-          "--border": "#3d3d42",
-          "--border-light": "#313136",
-          "--accent-ink": "#e0ac6c"
-        },
-        "swatch": "#2a2a2d"
+        "id": "safety-orange",
+        "name": "安全橙",
+        "en": "Safety Orange",
+        "scheme": "light",
+        "paper": "#fafaf8",
+        "ink": "#0a0a0a",
+        "accent": "#FF6B35"
       }
     ],
-    "fontVar": "--font-serif",
+    "fontVars": [
+      "--font-sans",
+      "--font-display"
+    ],
+    "preview": "黑体 Aa",
     "fonts": [
       {
-        "name": "Noto Serif SC",
-        "family": "'Noto Serif SC','Source Han Serif SC','Songti SC',Georgia,serif",
-        "google": "Noto+Serif+SC:wght@400;600;700"
+        "id": "inter",
+        "name": "Inter",
+        "family": "'Inter','Noto Sans SC','PingFang SC','Hiragino Sans GB','Microsoft YaHei',system-ui,sans-serif",
+        "href": "https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap"
       },
       {
-        "name": "Playfair Display",
-        "family": "'Playfair Display','Noto Serif SC','Songti SC',Georgia,serif",
-        "google": "Playfair+Display:wght@400;600;700"
+        "id": "dm-sans",
+        "name": "DM Sans",
+        "family": "'DM Sans','Noto Sans SC','PingFang SC','Hiragino Sans GB','Microsoft YaHei',system-ui,sans-serif",
+        "href": "https://fonts.googleapis.com/css2?family=DM+Sans:wght@100..1000&display=swap"
       },
       {
-        "name": "Source Serif 4",
-        "family": "'Source Serif 4','Noto Serif SC','Songti SC',Georgia,serif",
-        "google": "Source+Serif+4:wght@400;600;700"
+        "id": "space-grotesk",
+        "name": "Space Grotesk",
+        "family": "'Space Grotesk','Noto Sans SC','PingFang SC','Hiragino Sans GB','Microsoft YaHei',system-ui,sans-serif",
+        "href": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap"
       }
     ]
   }
