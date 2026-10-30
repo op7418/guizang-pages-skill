@@ -8,23 +8,25 @@
   /* ========================================
      TOKENS
      ======================================== */
+  /* Colours, fonts, type roles and spacing come from the design system
+     (assets/gz-magazine.css, inlined before this file; theme = <html data-theme>).
+     The names below are this stylesheet's own vocabulary, mapped onto its roles. */
   :root {
-    --fg: #1a1a1a;
-    --fg-secondary: #555;
-    --fg-tertiary: #888;
-    --bg: #f6f4f0;
-    --bg-card: #edeae4;
-    --bg-quote: #e8e5df;
-    --bg-highlight: #1a1a1a;
-    --fg-highlight: #f6f4f0;
-    --accent: #c45a3c;
-    --accent-ink: var(--accent);
-    --border: #d4d0c8;
-    --border-light: #e2dfd8;
-    --hc-mute: #b9b6ae;
-    --font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Source Han Serif CN', 'Songti SC', 'STSong', Georgia, serif;
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', 'Source Han Sans SC', sans-serif;
-    --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+    --fg: var(--text-primary);
+    --fg-secondary: var(--text-secondary);
+    --fg-tertiary: var(--text-helper);
+    --bg: var(--paper);
+    --bg-card: var(--paper-2);
+    --bg-quote: var(--paper-2);
+    --bg-highlight: var(--ink);
+    --fg-highlight: var(--paper);
+    --border: var(--line-subtle);
+    --border-light: rgba(var(--ink-rgb), .08);
+    --tbl-line: rgba(var(--ink-rgb), .09);
+    --quote-tint: rgba(var(--ink-rgb), .03);
+    --hc-mute: rgba(var(--ink-rgb), .25);
+    /* UI and table text: Latin sans first (Inter), then the CJK sans */
+    --font-sans: 'Inter', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
     --font-kai: "LXGW WenKai", "Kaiti SC", "STKaiti", "KaiTi", "BiauKai", "FangSong", "STFangsong", var(--font-serif, serif);
     --measure: 1200px;
     --gutter: 20px;
@@ -40,19 +42,13 @@
     --space-2xl: 72px;
     --space-3xl: 96px;
     /* CJK body text — see references/design-rules.md §中文排版 */
-    --text-size: 1.0625rem;
-    --text-leading: 1.85;
+    --text-size: var(--fs-body);
+    --text-leading: var(--lh-body);
     --text-measure: 36em;
     --para-gap: 1em;
   }
 
-  /* Dark "Charcoal" swatch: ui.js sets data-scheme="dark" plus inline colour vars */
-  :root[data-scheme="dark"] {
-    --hc-mute: #55555b;
-    --tbl-line: rgba(255,255,255,0.1);
-    --tbl-zebra: rgba(255,255,255,0.03);
-    --quote-tint: rgba(255,255,255,0.04);
-  }
+  /* Dark theme (midnight-ink): every colour above already follows the theme */
   :root[data-scheme="dark"] img { opacity: 0.94; }
 
   /* ========================================
@@ -87,7 +83,7 @@
 
   ::selection {
     background: var(--accent);
-    color: var(--fg-highlight);
+    color: var(--accent-on);
   }
 
   /* ========================================
@@ -143,9 +139,9 @@
     max-width: min(var(--wide, 920px), 100%);
     margin: 0 auto;
     padding: 28px 0 12px !important; /* beats ui.css print `.doc-chrome` padding */
-    border-bottom: 1px solid var(--line, rgba(0,0,0,.16));
+    border-bottom: 1px solid rgba(var(--ink-rgb), .16);
     font-family: var(--font-serif);
-    font-size: 13px;
+    font-size: var(--fs-label);
     letter-spacing: .04em;
     color: var(--fg-secondary, var(--fg));
     text-align: center;
@@ -175,7 +171,7 @@
 
   .hero h1 {
     font-family: var(--font-serif);
-    font-size: 2.7rem;
+    font-size: var(--fs-display);
     font-weight: 500;
     line-height: 1.3;
     letter-spacing: 0.03em; /* zh too: headings are deliberately tracked out */
@@ -183,7 +179,7 @@
   }
 
   .hero-subtitle {
-    font-size: 1.05rem;
+    font-size: var(--fs-lead);
     color: var(--fg-secondary);
     line-height: 1.7;
     margin: 18px auto 0;
@@ -231,7 +227,7 @@
 
   .section > h2 {
     font-family: var(--font-serif);
-    font-size: 1.85rem;
+    font-size: var(--fs-heading);
     font-weight: 500;
     line-height: 1.4;
     letter-spacing: 0.03em;
@@ -392,10 +388,10 @@
     margin: 32px auto;
     padding: 18px 0.25em;
     border-left: 0;
-    border-top: 1px solid var(--line, rgba(0,0,0,.18));
-    border-bottom: 1px solid var(--line, rgba(0,0,0,.18));
+    border-top: 1px solid rgba(var(--ink-rgb), .18);
+    border-bottom: 1px solid rgba(var(--ink-rgb), .18);
     font-family: var(--font-kai);
-    font-size: 1.0625rem;
+    font-size: var(--fs-body);
     line-height: 1.9;
     color: var(--fg);
   }
@@ -413,8 +409,8 @@
   blockquote .bq-nested {
     margin: 10px 0;
     padding: 2px 0 2px 1em;
-    border-left: 1px solid var(--line, rgba(0,0,0,.2));
-    background: var(--quote-tint, rgba(0,0,0,0.03));
+    border-left: 1px solid rgba(var(--ink-rgb), .2);
+    background: var(--quote-tint);
   }
 
   .bq-cite {
@@ -451,7 +447,7 @@
 
   .pullquote p {
     font-family: var(--font-serif);
-    font-size: 1.6rem;
+    font-size: var(--fs-quote);
     line-height: 1.6;
     letter-spacing: -0.01em;
     color: var(--fg);
@@ -480,7 +476,7 @@
     background: var(--bg-highlight);
     color: var(--fg-highlight);
     border-radius: 3px;
-    box-shadow: inset 4px 0 0 var(--accent);
+    box-shadow: inset 4px 0 0 var(--accent-ink-inverse);
     position: relative;
   }
 
@@ -513,7 +509,7 @@
 
   .highlight-card .attr {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-meta);
     letter-spacing: 0.06em;
     color: var(--fg-highlight); opacity: 0.55;
     margin-top: var(--space-md);
@@ -533,7 +529,7 @@
 
   .def-card-label {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-meta);
     letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--fg-tertiary);
@@ -576,7 +572,7 @@
 
   .aside-title {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-meta);
     font-weight: 600;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -600,11 +596,11 @@
 
   .summary-label {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-meta);
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--fg-highlight);
+    color: var(--accent-on);
     background: var(--accent);
     display: inline-block;
     padding: var(--space-xs) var(--space-md);
@@ -658,7 +654,7 @@
 
   .process-num {
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: var(--fs-meta);
     color: var(--accent-ink, var(--accent));
     flex: 0 0 32px;
     padding-top: 2px;
@@ -693,11 +689,11 @@
 
   .embed-label {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-meta);
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--fg-highlight);
+    color: var(--accent-on);
     padding: var(--space-xs) var(--space-md);
     background: var(--accent);
     display: inline-block;
@@ -718,7 +714,7 @@
 
   .embed-caption {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-meta);
     letter-spacing: 0.04em;
     color: var(--fg-tertiary);
     padding: 0 var(--space-md) var(--space-md);
@@ -769,7 +765,7 @@
 
   .gallery-cap {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-meta);
     letter-spacing: 0.04em;
     color: var(--fg-tertiary);
     margin-top: var(--space-sm);
@@ -778,7 +774,7 @@
 
   .gallery-hint {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-meta);
     color: var(--fg-tertiary);
     letter-spacing: 0.04em;
     margin-top: var(--space-sm);
@@ -809,7 +805,7 @@
 
   .img-placeholder span {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-meta);
     letter-spacing: 0.06em;
     color: var(--fg-tertiary);
     text-transform: uppercase;
@@ -844,7 +840,7 @@
   .figure-card figcaption {
     margin-top: 12px;
     font-family: var(--font-serif);
-    font-size: 13px;
+    font-size: var(--fs-caption);
     line-height: 1.6;
     letter-spacing: 0;
     color: var(--fg-secondary, var(--fg));
@@ -862,7 +858,7 @@
   .img-strip-wrap { margin-top: 2.2em; margin-bottom: 2.2em; }
   .img-strip { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 8px; }
   .img-strip .figure-card { flex: 0 0 62%; margin: 0; scroll-snap-align: start; }
-  .img-strip-hint { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); text-align: right; margin-top: 6px; }
+  .img-strip-hint { font-family: var(--font-mono); font-size: var(--fs-meta); color: var(--fg-tertiary); text-align: right; margin-top: 6px; }
 
   .media-embed video, .media-embed iframe { width: 100%; aspect-ratio: 16 / 9; height: auto; display: block; border: 0; background: #000; }
 
@@ -878,7 +874,7 @@
     width: 100%;
     min-width: 0;
     border-collapse: collapse;
-    font-size: 0.9rem;
+    font-size: var(--fs-small);
     font-variant-numeric: tabular-nums;
   }
 
@@ -898,7 +894,7 @@
 
   .table-wrap td {
     padding: 9px 12px;
-    border-bottom: 1px solid var(--tbl-line, rgba(0,0,0,0.09));
+    border-bottom: 1px solid var(--tbl-line);
     font-family: var(--font-serif);
     line-height: 1.45;
     color: var(--fg);
@@ -941,14 +937,14 @@
   .hc-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 20px; margin-bottom: 22px; font-size: 0.78rem; color: var(--fg-secondary); }
   .hc-key i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; vertical-align: -1px; background: var(--hc-mute); }
   .hc-row { display: grid; grid-template-columns: minmax(120px, 30%) 1fr; gap: 18px; align-items: center; padding: 7px 0; }
-  .hc-group { padding: 16px 0; border-top: 1px solid var(--tbl-line, rgba(0,0,0,0.08)); }
+  .hc-group { padding: 16px 0; border-top: 1px solid var(--tbl-line); }
   .hc-label { font-size: 0.82rem; color: var(--fg); line-height: 1.35; }
   .hc-bars { display: grid; gap: 6px; }
   .hc-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 20px; }
   .hc-group .hc-bar { height: 14px; }
   .hc-fill { display: block; height: 100%; background: var(--hc-mute); flex: none; }
-  .hc-val { font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--fg-secondary); white-space: nowrap; }
-  .hc-group .hc-val { font-size: 0.68rem; }
+  .hc-val { font-size: var(--fs-meta); font-variant-numeric: tabular-nums; color: var(--fg-secondary); white-space: nowrap; }
+  .hc-group .hc-val { font-size: var(--fs-meta); }
   .hc-hi .hc-fill, .hc-key.hc-hi i { background: var(--accent); }
   .hc-hi .hc-val, .hc-row.hc-hi .hc-label { color: var(--fg); font-weight: 600; }
   .hc-s1.hc-hi .hc-fill, .hc-key.hc-s1.hc-hi i { background: var(--accent); opacity: 0.6; }
@@ -1047,7 +1043,7 @@
 
   .toc-header {
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: var(--fs-label);
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -1063,7 +1059,7 @@
     align-items: baseline;
     padding: 9px 0;
     font-family: var(--font-sans);
-    font-size: 1.0625rem;
+    font-size: var(--fs-body);
     font-weight: 400;
     line-height: 1.55;
     color: var(--fg-secondary);
@@ -1119,7 +1115,7 @@
 
   .container > footer p {
     font-family: var(--font-mono);
-    font-size: 10px;
+    font-size: var(--fs-meta);
     letter-spacing: 0.06em;
     color: var(--fg-tertiary);
     text-transform: uppercase;
@@ -1158,7 +1154,7 @@
      next page and leaves a half-empty page behind.
      ======================================== */
   @media print {
-    body { background: #fff; }
+    :root[data-scheme="light"] body { background: #fff; }
     .gallery { flex-wrap: wrap; overflow: visible; }
     .gallery-item { width: 45%; }
     .img-strip { flex-wrap: wrap; overflow: visible; }
