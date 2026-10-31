@@ -1190,3 +1190,11 @@
     .embed-body { overflow-x: auto; }
     .embed-body > svg { min-width: 520px; }
   }
+
+  /* Phones: side-by-side image rows stack one per line, shown whole (no 4:3 crop) */
+  @media (max-width: 640px) {
+    .img-row-2, .img-row-3 { grid-template-columns: minmax(0, 1fr); gap: var(--space-lg, 20px); }
+    .img-row .figure-card img { aspect-ratio: auto; height: auto; object-fit: contain; }
+    .figure-card img, .section img, .table-wrap { max-width: 100%; }
+    .table-wrap { overflow-x: auto; }
+  }

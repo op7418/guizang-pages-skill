@@ -856,3 +856,12 @@
     .embed-body { overflow-x: auto; }
     .embed-body > svg { min-width: 520px; }
   }
+
+  /* Phones: side-by-side image rows stack one per line, shown whole (no 4:3 crop); callouts get tighter padding */
+  @media (max-width: 640px) {
+    .img-row-2, .img-row-3 { grid-template-columns: minmax(0, 1fr); gap: var(--sp-6, 20px); }
+    .img-row .figure-card img { aspect-ratio: auto; height: auto; object-fit: contain; }
+    .def-card-swiss { padding-left: 16px; padding-right: 16px; }
+    .figure-card img, .section img, .table-wrap { max-width: 100%; }
+    .table-wrap { overflow-x: auto; }
+  }
